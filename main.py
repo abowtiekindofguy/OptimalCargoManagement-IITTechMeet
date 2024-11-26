@@ -88,7 +88,7 @@ def parse_input(file):
     return ulds, packages, K
 
 if __name__ == "__main__":
-    ulds, packages, K = parse_input("data/Challange_FedEx.txt")
+    ulds, packages, K = parse_input("data/Challenge_FedEx.txt")
     ocm = OptimalCargoManagement(ulds, packages, K)
     ocm.fit()
     print(ocm.cost())
