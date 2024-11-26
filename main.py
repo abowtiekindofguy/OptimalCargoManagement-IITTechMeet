@@ -17,10 +17,43 @@ class OptimalCargoManagement(object):
         total_cost = 0
         for uld_id, uld in self.ulds.items():
             total_cost += uld.cost(self.K)
-        for package_id, package in self.packages.items():
-            if package.loaded is None: total_cost += package.delay
+        # for package_id, package in self.packages.items():
+        #     if package.loaded is None: total_cost += package.delay
             
         return total_cost
+    
+    def fit(self):
+        for package_id, package in self.packages.items():
+            if package.priority:
+                for uld_id, uld in self.ulds.items():
+                    r = uld.update_filled_coordinates(package)
+                    if r: break
+                        # uld.add_package(package)
+                        # break
+                    
+    def __repr__(self):
+        package_string = "\n"
+        for package_id, package in self.packages.items():
+            if package.loaded is not None:
+                package_string += f"{package}\n"
+        # return f"OptimalCargoManagement({self.ulds}, {self.packages}, {self.K}) + {package_string}"
+        return package_string
+    
+    
+    def print_solution(self, filename):
+        with open(filename, 'w') as file:
+            file.write("9,9,9\n")
+            for package_id, package in self.packages.items():
+                # if package.loaded is None:
+                #     file.write(f"{package.package_id},-1,-1,-1,-1,-1,-1,-1\n")
+                if package.loaded is not None:
+                    file.write(f"{package.package_id},{package.loaded},{package.corners[0][0]},{package.corners[0][1]},{package.corners[0][2]},{package.corners[7][0]},{package.corners[7][1]},{package.corners[7][2]}\n")
+                    # file.write(f"{package.corners}")
+
+    
+    
+    
+    
     
 def parse_input(file):
     with open(file, 'r') as file:
@@ -55,6 +88,10 @@ def parse_input(file):
     return ulds, packages, K
 
 if __name__ == "__main__":
-    ulds, packages, K = parse_input("input.txt")
+    ulds, packages, K = parse_input("data/Challange_FedEx.txt")
     ocm = OptimalCargoManagement(ulds, packages, K)
+    ocm.fit()
     print(ocm.cost())
+    print(ocm)
+    # print(ocm.print_solution("solution.txt"))
+    ocm.print_solution("solution.txt")

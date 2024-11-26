@@ -26,5 +26,9 @@ class Package:
         
         
     def __repr__(self):
-        return f"Package({self.package_id}, {self.length}, {self.width}, {self.height}, {self.weight}, {self.priority}, {self.delay})"
+        return f"Package({self.package_id}, {self.priority}, {self.loaded}, {self.corners})"    
 
+    def generate_corners(self, reference_corner):
+        x, y, z = reference_corner
+        self.corners = [(x, y, z), (x + self.length, y, z), (x, y + self.width, z), (x + self.length, y + self.width, z), (x, y, z + self.height), (x + self.length, y, z + self.height), (x, y + self.width, z + self.height), (x + self.length, y + self.width, z + self.height)]
+        return self.corners

@@ -136,6 +136,8 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
     for uld_id, uld_packages in uld_groups.items():
         if uld_id == "NONE":
             continue
+        
+        number_of_packages = len(uld_packages)
 
         fig = plt.figure(figsize=(8, 6))
         ax = fig.add_subplot(111, projection='3d')
@@ -169,7 +171,11 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
                 [vertices[i] for i in [0, 3, 7, 4]],  
             ]
             color = packages1[package_id].priority == "Priority" and priority_color or economy_color
-            ax.add_collection3d(Poly3DCollection(faces, alpha=0.5, color=color))
+            # for face in faces:
+            #     ax.plot([v[0] for v in face] + [face[0][0]], 
+            #             [v[1] for v in face] + [face[0][1]], 
+            #             [v[2] for v in face] + [face[0][2]], color=color)
+            ax.add_collection3d(Poly3DCollection(faces, facecolors=color, linewidths=1, edgecolors='black', alpha=0.1))
 
             ax.text((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, package_id, fontsize=8)
 
@@ -179,7 +185,7 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
         ax.set_zlim(z_min, z_max)
-        ax.set_title(f"ULD: {uld_id} Visualization\nTotal Cost: {total_cost}, Total Packages: {total_packages}, Priority ULDs: {priority_ULDs}")
+        ax.set_title(f"ULD: {uld_id} Visualization\nTotal Cost: {total_cost}, Total Packages: {total_packages}, Priority ULDs: {number_of_packages}")
 
         plt.show()
 
