@@ -1,5 +1,6 @@
 from uld import ULD
 from package import Package 
+from visualizer import visualize
 
 class OptimalCargoManagement(object):
     def __init__(self, ulds, packages, K):
@@ -95,3 +96,4 @@ if __name__ == "__main__":
     print(ocm)
     # print(ocm.print_solution("solution.txt"))
     ocm.print_solution("solution.txt")
+    visualize("data/Challenge_FedEx.txt", "solution.txt")

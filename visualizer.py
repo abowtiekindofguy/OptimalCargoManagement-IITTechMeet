@@ -187,17 +187,15 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
         ax.set_zlim(z_min, z_max)
         ax.set_title(f"ULD: {uld_id} Visualization\nTotal Cost: {total_cost}, Total Packages: {total_packages}, Priority ULDs: {number_of_packages}")
 
-        plt.show()
+        plt.savefig(f"output/uld_{uld_id}.png")
 
+
+def visualize(input_file, output_file):
+    ulds, packages1, k = parse_input(input_file)
+    t = (list(ulds.values()))
+    total_cost, total_packages, priority_ULDs, packages = parse_output(output_file)
+    visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages)
     
 if __name__ == "__main__":
-    ulds, packages1, k = parse_input(sys.argv[1])
-    # print(ulds)
-    # print(packages)
-    # print_summary(ulds, packages)
-    t = (list(ulds.values()))
-    # pack_ulds(t, list(packages1.values()), k, "output")
-    total_cost, total_packages, priority_ULDs, packages = parse_output(sys.argv[2])
-    # print(parse_output(sys.argv[2]))
-    visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages)
+    visualize(sys.argv[1], sys.argv[2])
     
