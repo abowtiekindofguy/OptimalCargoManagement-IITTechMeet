@@ -123,7 +123,7 @@ def print_summary(ulds, packages):
         print(pkg)
 
 
-def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages):
+def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show=False):
     # Group packages by ULD ID
     uld_groups = {}
     for package_id, uld_id, coords in packages:
@@ -187,14 +187,17 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
         ax.set_zlim(z_min, z_max)
         ax.set_title(f"ULD: {uld_id} Visualization\nTotal Cost: {total_cost}, Total Packages: {total_packages}, Priority ULDs: {number_of_packages}")
 
-        plt.savefig(f"output/uld_{uld_id}.png")
+        if show:
+            plt.show()
+        else:
+            plt.savefig(f"output/{output_file}_{uld_id}.png")
 
 
-def visualize(input_file, output_file):
+def visualize(input_file, output_file, show=False):
     ulds, packages1, k = parse_input(input_file)
     t = (list(ulds.values()))
-    total_cost, total_packages, priority_ULDs, packages = parse_output(output_file)
-    visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages)
+    total_cost, total_packages, priority_ULDs, packages = parse_output(f"output/{output_file}")
+    visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show)
     
 if __name__ == "__main__":
     visualize(sys.argv[1], sys.argv[2])

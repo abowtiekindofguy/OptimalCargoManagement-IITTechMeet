@@ -1,5 +1,5 @@
 from uld import ULD
-from package import Package 
+from package import Package, crainic_sorting 
 from visualizer import visualize
 
 class OptimalCargoManagement(object):
@@ -7,6 +7,8 @@ class OptimalCargoManagement(object):
         self.ulds = ulds
         self.packages = packages
         self.K = K
+        self.package_ordering = []
+        # self.create_package_ordering()
         
     def add_uld(self, uld):
         self.ulds[uld.uld_id] = uld 
@@ -16,21 +18,27 @@ class OptimalCargoManagement(object):
         
     def cost(self):
         total_cost = 0
-        for uld_id, uld in self.ulds.items():
-            total_cost += uld.cost(self.K)
-        # for package_id, package in self.packages.items():
-        #     if package.loaded is None: total_cost += package.delay
-            
+        priority_activated_ulds = set()
+        for package_id, package in self.packages.items():
+            if package.loaded is not None and package.priority:
+                priority_activated_ulds.add(package.loaded)
+        priority_cost = len(priority_activated_ulds) * self.K
+        economy_cost = 0
+        for package_id, package in self.packages.items():
+            if not package.priority and package.loaded is None:
+                economy_cost += package.delay
+        total_cost = priority_cost + economy_cost
+        print(f"Priority cost: {priority_cost}, Economy cost: {economy_cost}, Total cost: {total_cost}")
         return total_cost
     
     def fit(self):
-        for package_id, package in self.packages.items():
-            if package.priority:
-                for uld_id, uld in self.ulds.items():
-                    r = uld.update_filled_coordinates(package)
-                    if r: break
-                        # uld.add_package(package)
-                        # break
+        # print(self.package_ordering)
+        # print(len(self.package_ordering))
+        for order in self.package_ordering:
+            package_id = order[0]
+            for uld_id, uld in self.ulds.items():
+                r = uld.update_filled_coordinates(self.packages[package_id])
+                if r: break
                     
     def __repr__(self):
         package_string = "\n"
@@ -52,7 +60,28 @@ class OptimalCargoManagement(object):
                     # file.write(f"{package.corners}")
 
     
-    
+    def create_package_ordering(self):
+        # self.package_ordering = crainic_sorting(self.packages)
+        # crainic_sorting(self.packages)
+        priority_packages_dict = {}
+        non_priority_packages_dict = {}
+        for package_id, package in self.packages.items():
+            if package.priority:
+                priority_packages_dict[package_id] = package
+            else:
+                non_priority_packages_dict[package_id] = package
+        # self.package_ordering = crainic_sorting(priority_packages_dict)
+        priority_ordering = crainic_sorting(priority_packages_dict, group_on_dim = True, opposite_order = False)
+        non_priority_ordering = crainic_sorting(non_priority_packages_dict, group_on_dim = True)
+        # self.package_ordering = {**priority_ordering, **non_priority_ordering}
+        self.package_ordering = priority_ordering + non_priority_ordering
+        
+    def reorient_packages(self):
+        for order in self.package_ordering:
+            package_id = order[0]
+            order_z_against = order[1]            
+            package_to_reorient = self.packages[package_id]
+            package_to_reorient.reorient(order_z_against)
     
     
     
@@ -89,11 +118,18 @@ def parse_input(file):
     return ulds, packages, K
 
 if __name__ == "__main__":
-    ulds, packages, K = parse_input("data/Challenge_FedEx.txt")
-    ocm = OptimalCargoManagement(ulds, packages, K)
-    ocm.fit()
-    print(ocm.cost())
-    print(ocm)
-    # print(ocm.print_solution("solution.txt"))
-    ocm.print_solution("solution.txt")
-    visualize("data/Challenge_FedEx.txt", "solution.txt")
+    costs = []
+    for random_run in range(50):
+        ulds, packages, K = parse_input("data/Challenge_FedEx.txt")
+        output_file = f"solution_{random_run}.txt"
+        ocm = OptimalCargoManagement(ulds, packages, K)
+        ocm.create_package_ordering()
+        ocm.reorient_packages()
+        ocm.fit()
+        print(random_run+1, ocm.cost())
+        costs.append(ocm.cost())
+        ocm.print_solution(f"output/{output_file}")
+        visualize("data/Challenge_FedEx.txt", output_file, show = False)
+        
+    print(min(costs))
+    print(costs.index(min(costs)))  
