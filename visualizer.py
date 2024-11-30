@@ -125,6 +125,8 @@ def print_summary(ulds, packages):
 
 def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show=False):
     # Group packages by ULD ID
+    priority_packages_count = 0
+    economy_packages_count = 0
     uld_groups = {}
     for package_id, uld_id, coords in packages:
         if uld_id not in uld_groups:
@@ -144,6 +146,9 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
 
         x_min, y_min, z_min = float('inf'), float('inf'), float('inf')
         x_max, y_max, z_max = float('-inf'), float('-inf'), float('-inf')
+
+        eco_cost_uld = 0
+        pri_cost_uld = 0
 
         for package_id, coords in uld_packages:
             x0, y0, z0, x1, y1, z1 = coords
@@ -171,6 +176,12 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
                 [vertices[i] for i in [0, 3, 7, 4]],  
             ]
             color = packages1[package_id].priority == "Priority" and priority_color or economy_color
+            if packages1[package_id].priority == "Priority":
+                priority_packages_count += 1
+                pri_cost_uld += 1
+            else:
+                economy_packages_count += 1
+                eco_cost_uld += 1   
             # for face in faces:
             #     ax.plot([v[0] for v in face] + [face[0][0]], 
             #             [v[1] for v in face] + [face[0][1]], 
@@ -179,18 +190,21 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
 
             ax.text((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, package_id, fontsize=8)
 
+
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
         ax.set_zlim(z_min, z_max)
-        ax.set_title(f"ULD: {uld_id} Visualization\nTotal Cost: {total_cost}, Total Packages: {total_packages}, Priority ULDs: {number_of_packages}")
+        ax.set_title(f"ULD: {uld_id} Visualization\nPriority Packages Packed: {pri_cost_uld}, Economy Packages Packed: {eco_cost_uld}")
 
         if show:
             plt.show()
         else:
             plt.savefig(f"output/{output_file}_{uld_id}.png")
+        
+    print(f"Priority Packages: {priority_packages_count}, Economy Packages: {economy_packages_count}")
 
 
 def visualize(input_file, output_file, show=False):
