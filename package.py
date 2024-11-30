@@ -24,7 +24,11 @@ class Package:
         return x_center, y_center, z_center
         
     def __repr__(self):
-        return f"Package({self.package_id}, {self.priority}, {self.loaded}, {self.corners})"    
+        if self.loaded is not None:
+            return f"Package(Pkg ID: {self.package_id}, {self.priority}, Loaded: {self.loaded}, Reference Corner: {self.corners[0]}, Delay: {self.delay})"
+        else:
+            
+            return f"Package(Pkg ID: {self.package_id}, {self.priority}, Loaded: {self.loaded}, Reference Corner: {self.corners}, Delay: {self.delay})"    
 
     def generate_corners(self, reference_corner):
         x, y, z = reference_corner

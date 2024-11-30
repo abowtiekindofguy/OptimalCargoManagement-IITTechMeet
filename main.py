@@ -1,6 +1,8 @@
 from uld import ULD
 from package import Package, crainic_sorting 
 from visualizer import visualize
+import random
+import matplotlib.pyplot
 
 class OptimalCargoManagement(object):
     def __init__(self, ulds, packages, K):
@@ -80,8 +82,16 @@ class OptimalCargoManagement(object):
         for uld_id, uld in self.ulds.items():
             uld.create_cuboid_environment()
         extra_count = 0
+        unloaded_pkd_ids = []
         for package_id, package in self.packages.items():
+            if package.loaded is None:
+                unloaded_pkd_ids.append(package_id)
+        # random.shuffle(unloaded_pkd_ids)
+        sorted_unloaded_pkd_ids = sorted(unloaded_pkd_ids, key = lambda x: self.packages[x].delay, reverse = True)
+        # for package_id, package in self.packages.items():
             # print(package_id)
+        for package_id in sorted_unloaded_pkd_ids:
+            package = self.packages[package_id]
             if extra_count > 450:
                 break
             if package.loaded is None:
@@ -129,18 +139,23 @@ def parse_input(file):
 
 if __name__ == "__main__":
     costs = []
+    matplotlib.pyplot.close("all")
     for random_run in range(50):
+        show = False
         ulds, packages, K = parse_input("data/Challenge_FedEx.txt")
         output_file = f"solution_{random_run}.txt"
         ocm = OptimalCargoManagement(ulds, packages, K)
         ocm.create_package_ordering()
         ocm.reorient_packages()
         ocm.fit()
-        ocm.extra_additions()
+        cost_before = ocm.cost()
+        if cost_before < 50000:
+            ocm.extra_additions()
+            show = True
         print(random_run+1, ocm.cost())
         costs.append(ocm.cost())
         ocm.print_solution(f"output/{output_file}")
-        visualize("data/Challenge_FedEx.txt", output_file, show = True)
+        visualize("data/Challenge_FedEx.txt", output_file, show = show)
         
     print(min(costs))
     print(costs.index(min(costs)))  

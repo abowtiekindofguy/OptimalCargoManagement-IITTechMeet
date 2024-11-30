@@ -200,5 +200,5 @@ def visualize(input_file, output_file, show=False):
     visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show)
     
 if __name__ == "__main__":
-    visualize(sys.argv[1], sys.argv[2])
+    visualize(sys.argv[1], sys.argv[2], True)
     
