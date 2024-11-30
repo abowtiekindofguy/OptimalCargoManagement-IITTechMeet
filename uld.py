@@ -22,11 +22,23 @@ class ULD:
             if package.priority: return K
         return 0
     
+    def refresh(self):
+        self.used_volume = 0
+        self.used_weight = 0
+        self.packages = {}
+        self.x_filled, self.y_filled, self.z_filled = 0, 0, 0
+        self.last_plane_y = 0
+        self.last_filled_row_z = 0
+        self.existing_cuboids = []
+        # self.current_filled_row_z = 0
+    
     def add_package(self,package):
         self.packages[package.package_id]=package
 
     def remove_package(self,package_id):
-        del self.packages[package_id]   
+        # self.packages[package_id].loaded = None
+        # del self.packages[package_id]
+        pass   
 
     def __repr__(self):
         return f"ULD({self.uld_id}, {self.length}, {self.width}, {self.height}, {self.capacity})"
