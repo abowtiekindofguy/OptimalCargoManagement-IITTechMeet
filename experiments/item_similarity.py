@@ -31,9 +31,10 @@ for _ in range(package_count):
     if priority != "Priority":
         volumes.append(int(length)*int(width)*int(height))
         delays.append(int(delay))
+        total_delay += int(delay)
+        
     weight = int(weight)
     delay = delay
-    total_delay += int(delay)
     # packages[package_id] = Package(package_id, int(length), int(width), int(height), weight, priority, delay)
     line_index += 1
     package_dim_list.append(([int(length), int(width), int(height)]))
@@ -70,4 +71,4 @@ import scipy.stats as stats
 correlation_matrix = stats.spearmanr(volumes, delays)
 print(correlation_matrix)
 
-import 
+# import 

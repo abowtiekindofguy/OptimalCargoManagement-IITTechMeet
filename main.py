@@ -53,16 +53,11 @@ class OptimalCargoManagement(object):
         with open(filename, 'w') as file:
             file.write("9,9,9\n")
             for package_id, package in self.packages.items():
-                # if package.loaded is None:
-                #     file.write(f"{package.package_id},-1,-1,-1,-1,-1,-1,-1\n")
                 if package.loaded is not None:
                     file.write(f"{package.package_id},{package.loaded},{package.corners[0][0]},{package.corners[0][1]},{package.corners[0][2]},{package.corners[7][0]},{package.corners[7][1]},{package.corners[7][2]}\n")
-                    # file.write(f"{package.corners}")
 
     
     def create_package_ordering(self):
-        # self.package_ordering = crainic_sorting(self.packages)
-        # crainic_sorting(self.packages)
         priority_packages_dict = {}
         non_priority_packages_dict = {}
         for package_id, package in self.packages.items():
@@ -70,10 +65,8 @@ class OptimalCargoManagement(object):
                 priority_packages_dict[package_id] = package
             else:
                 non_priority_packages_dict[package_id] = package
-        # self.package_ordering = crainic_sorting(priority_packages_dict)
         priority_ordering = crainic_sorting(priority_packages_dict, group_on_dim = True, opposite_order = False)
         non_priority_ordering = crainic_sorting(non_priority_packages_dict, group_on_dim = True)
-        # self.package_ordering = {**priority_ordering, **non_priority_ordering}
         self.package_ordering = priority_ordering + non_priority_ordering
         
     def reorient_packages(self):
@@ -82,6 +75,23 @@ class OptimalCargoManagement(object):
             order_z_against = order[1]            
             package_to_reorient = self.packages[package_id]
             package_to_reorient.reorient(order_z_against)
+            
+    def extra_additions(self):
+        for uld_id, uld in self.ulds.items():
+            uld.create_cuboid_environment()
+        extra_count = 0
+        for package_id, package in self.packages.items():
+            # print(package_id)
+            if extra_count > 450:
+                break
+            if package.loaded is None:
+                print(f"Package {package_id} not loaded")
+                for uld_id, uld in self.ulds.items():
+                    r = uld.fit_in_package(package)
+                    print(r)
+                    extra_count += 1
+                    if r: break
+                print(package)
     
     
     
@@ -126,10 +136,11 @@ if __name__ == "__main__":
         ocm.create_package_ordering()
         ocm.reorient_packages()
         ocm.fit()
+        ocm.extra_additions()
         print(random_run+1, ocm.cost())
         costs.append(ocm.cost())
         ocm.print_solution(f"output/{output_file}")
-        visualize("data/Challenge_FedEx.txt", output_file, show = False)
+        visualize("data/Challenge_FedEx.txt", output_file, show = True)
         
     print(min(costs))
     print(costs.index(min(costs)))  

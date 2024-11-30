@@ -1,4 +1,5 @@
 from package import Package
+from cuboid import *
 
 class ULD:
     def __init__(self, uld_id, length, width, height, capacity):
@@ -13,6 +14,7 @@ class ULD:
         self.x_filled, self.y_filled, self.z_filled = 0, 0, 0
         self.last_plane_y = 0
         self.last_filled_row_z = 0
+        self.existing_cuboids = []
         # self.current_filled_row_z = 0
         
     def cost(self, K):
@@ -73,10 +75,33 @@ class ULD:
             self.last_filled_row_z = 0  
             
             return True
-        
-        
-            
-        
         else:
             return False
+        
+    def create_cuboid_environment(self):
+        for package_id, box_package in self.packages.items():
+            self.existing_cuboids.append(Cuboid(box_package.corners[0], box_package.corners[7]))
+        # return self.existing_cuboids 
             
+    def fit_in_package(self, package):
+        larger_uld_cuboid = Cuboid((0, 0, 0), (self.length, self.width, self.height))
+        # new_cuboid_size = (package.length, package.width, package.height)
+        cuboid_sizes = [(package.length, package.width, package.height), (package.width, package.length, package.height), (package.height, package.length, package.width), (package.height, package.width, package.length), (package.width, package.height, package.length), (package.length, package.height, package.width)]
+        # existing_cuboids = []
+        # for package_id, box_package in self.packages.items():
+        #     existing_cuboids.append(Cuboid(box_package.corners[0], box_package.corners[7]))
+        #try different orientations of new_cuboid_size
+        for new_cuboid_size in cuboid_sizes:
+            a = find_placement(new_cuboid_size, larger_uld_cuboid, self.existing_cuboids)
+            if a:
+                package.length, package.width, package.height = new_cuboid_size
+                package_reference_corner = a
+                package.generate_corners(package_reference_corner)
+                self.packages[package.package_id]=package
+                package.loaded = self.uld_id
+                self.existing_cuboids.append(Cuboid(package.corners[0], package.corners[7]))
+                return package.loaded
+            # else:
+            #     return False
+        return False
+        

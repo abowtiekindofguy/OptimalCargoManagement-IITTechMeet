@@ -12,9 +12,6 @@ class Package:
         self.corners = []
         self.loaded = None
         
-    # def reference_corner(self):
-    #     self.corners
-    
     def center(self):
         x_center, y_center, z_center = 0, 0, 0
         for corner in self.corners:
@@ -25,7 +22,6 @@ class Package:
         y_center /= 8
         z_center /= 8
         return x_center, y_center, z_center
-        
         
     def __repr__(self):
         return f"Package({self.package_id}, {self.priority}, {self.loaded}, {self.corners})"    
