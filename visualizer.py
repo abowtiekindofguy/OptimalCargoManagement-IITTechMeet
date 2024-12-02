@@ -149,7 +149,7 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
 
         eco_cost_uld = 0
         pri_cost_uld = 0
-
+        filled_capacity_uld = 0
         for package_id, coords in uld_packages:
             x0, y0, z0, x1, y1, z1 = coords
 
@@ -176,6 +176,7 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
                 [vertices[i] for i in [0, 3, 7, 4]],  
             ]
             color = packages1[package_id].priority == "Priority" and priority_color or economy_color
+            filled_capacity_uld += packages1[package_id].weight
             if packages1[package_id].priority == "Priority":
                 priority_packages_count += 1
                 pri_cost_uld += 1
@@ -203,6 +204,10 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
             plt.show()
         else:
             plt.savefig(f"output/{output_file}_{uld_id}.png")
+            
+        # print(uld_id, "Filled Capacity: ", filled_capacity_uld)
+        print(uld_id, "Max Allowed Capacity: ", ulds[uld_id].capacity, "Filled Capacity: ", filled_capacity_uld)
+        print(uld_id, "Priority Packages:", pri_cost_uld, "Economy Packages:", eco_cost_uld)
         
     print(f"Priority Packages: {priority_packages_count}, Economy Packages: {economy_packages_count}")
 
@@ -214,5 +219,5 @@ def visualize(input_file, output_file, show=False):
     visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show)
     
 if __name__ == "__main__":
-    visualize(sys.argv[1], sys.argv[2], True)
+    visualize(sys.argv[1], sys.argv[2], 1)
     

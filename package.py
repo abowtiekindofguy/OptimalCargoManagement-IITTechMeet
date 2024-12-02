@@ -37,10 +37,16 @@ class Package:
     
     def reorient(self, z_index):
         dimension_list = [self.length, self.width, self.height]
-        self.height = dimension_list[z_index-1]
+        # self.height = dimension_list[z_index-1]
+        # rest_dimensions = [dimension_list[i] for i in range(3) if i != z_index-1]
+        # self.length = max(rest_dimensions)
+        # self.width = min(rest_dimensions)
+        self.width = dimension_list[z_index-1]
         rest_dimensions = [dimension_list[i] for i in range(3) if i != z_index-1]
-        self.length = max(rest_dimensions)
-        self.width = min(rest_dimensions)
+        # self.height = min(rest_dimensions)
+        # self.length = max(rest_dimensions)
+        self.height = max(rest_dimensions)
+        self.length = min(rest_dimensions)
         
     
     
@@ -82,20 +88,21 @@ def crainic_sorting(packages_dictionary, group_on_dim = False, opposite_order = 
         to_append.append((package_id, item_details[1]))
         for packages in item_details[0]:
             to_append.append(packages)
-        # random.shuffle(to_append)
+        random.shuffle(to_append)
         main_package = packages_dimensions_dict[package_id]
         dimension_to_group_idx = item_details[1]
         dimension_to_group = main_package[dimension_to_group_idx-1]
-        #all dimensions of the main package
-        all_dimension_of_main_package = [main_package.length, main_package.width, main_package.height]
-        all_dimension_of_main_package.remove(dimension_to_group)
-        def max_dimension_apart_from_grouped(package_id, dim_to_remove):
-            package = packages_dictionary[package_id]
-            package_dimensions = [package.length, package.width, package.height]
-            package_dimensions.remove(dim_to_remove)
-            return max(package_dimensions)
+        # #all dimensions of the main package
+        # main_pkg = packages_dictionary[package_id]
+        # all_dimension_of_main_package = [main_pkg.length, main_pkg.width, main_pkg.height]
+        # all_dimension_of_main_package.remove(dimension_to_group)
+        # def max_dimension_apart_from_grouped(package_id, dim_to_remove):
+        #     package = packages_dictionary[package_id]
+        #     package_dimensions = [package.length, package.width, package.height]
+        #     package_dimensions.remove(dim_to_remove)
+        #     return max(package_dimensions)
         
-        to_append = sorted(to_append, key = lambda x: max_dimension_apart_from_grouped(x[0], dimension_to_group), reverse = True)
+        # to_append = sorted(to_append, key = lambda x: max_dimension_apart_from_grouped(x[0], dimension_to_group), reverse = True)
             
         groups.append(to_append)
         dimension_group_order[dimension_to_group] = to_append

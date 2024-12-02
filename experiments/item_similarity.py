@@ -4,6 +4,7 @@ uld_count = int(lines[0])
 ulds = {}
 line_index = 1
 uld_volumes = []
+uld_volume_dict = {}
 for _ in range(uld_count):
     uld_data = lines[line_index].split(",")
     uld_id=uld_data[0]
@@ -13,6 +14,7 @@ for _ in range(uld_count):
     capacity=uld_data[4]
     # ulds[uld_id] = ULD(uld_id, int(length), int(width), int(height), int(capacity))
     uld_volumes.append(int(length)*int(width)*int(height))
+    uld_volume_dict[uld_id] = int(length)*int(width)*int(height)
     line_index += 1
 
 package_count = int(lines[line_index]) 
@@ -28,17 +30,22 @@ volumes = []
 delays = []
 priority_volumes = []
 economic_volumes = []
+priority_weights, economic_weights = [], []
+# filled_uld_weights = {}
 for _ in range(package_count):
     package_data = lines[line_index].split(",")
     package_id, length, width, height, weight, priority, delay = package_data
     priority = priority.strip()
+    
     if priority != "Priority":
         volumes.append(int(length)*int(width)*int(height))
         delays.append(int(delay))
         total_delay += int(delay)
         economic_volumes.append(int(length)*int(width)*int(height)) 
+        economic_weights.append(int(weight))
     else:
         priority_volumes.append(int(length)*int(width)*int(height))
+        priority_weights.append(int(weight))
         
     weight = int(weight)
     delay = delay
@@ -61,36 +68,10 @@ for i in range(0, len(package_dim_list)):
         if package_i_list[0] in package_j_list or package_i_list[1] in package_j_list or package_i_list[2] in package_j_list:
             non_unique += 1
             # print(i, j)
-# print(i, len_of_unique)
 
-# print(non_unique)
-# print(200*399)
-    
-# print(total_delay)
 
-# K = int(lines[line_index]) 
-
-# # return ulds, packages, K
-
-# import scipy.stats as stats 
-
-# #get correlation matrix
-# correlation_matrix = stats.spearmanr(volumes, delays)
-# print(correlation_matrix)
-
-# print(sum(uld_volumes))
-# print("Average delay", total_delay/len(economic_volumes))
-# print("Average Economic Volume", sum(economic_volumes)/len(economic_volumes))
-# print("Priority", sum(priority_volumes))
-# print("Economic", sum(economic_volumes))
-# print("Total", sum(priority_volumes) + sum(economic_volumes))
-# print("Total - Priority", sum(uld_volumes) - sum(priority_volumes))
-# print("Rough Economic Boxes Remaining", (sum(uld_volumes) - sum(priority_volumes))*len(economic_volumes)/sum(economic_volumes))
-# print("Left out economic boxes", len(economic_volumes)- (sum(uld_volumes) - sum(priority_volumes))*len(economic_volumes)/sum(economic_volumes))
-# print("Percentage", (sum(priority_volumes) + sum(economic_volumes))/sum(uld_volumes)*100)
-# print("Economic Percentage", sum(economic_volumes)/sum(uld_volumes)*100)
-# print("Priority Percentage", sum(priority_volumes)/sum(uld_volumes)*100)
-# print("Economy after priority", sum(economic_volumes)/(sum(uld_volumes) - sum(priority_volumes))*100)
+for i,j in uld_volume_dict.items():
+    print(i, j)
 
 print("Sum of all ULD Volumes:", sum(uld_volumes))
 print("Average Delay of Economic Boxes:", total_delay/len(economic_volumes))
@@ -102,5 +83,9 @@ print("Total ULD Volume - Priority:", sum(uld_volumes) - sum(priority_volumes))
 print("Rough Estimate of Economic Boxes that can be fitted:", (sum(uld_volumes) - sum(priority_volumes))*len(economic_volumes)/sum(economic_volumes))
 print("Rough Estimate of Economic Boxes left out:", len(economic_volumes)- (sum(uld_volumes) - sum(priority_volumes))*len(economic_volumes)/sum(economic_volumes))
 print("Rough Estimate of Economic Cost with the rough estimate:", total_delay- (sum(uld_volumes) - sum(priority_volumes))*total_delay/sum(economic_volumes))
+
+
+print ("Sum of priority weights:", sum(priority_weights))
+print ("ULD Volume Dict:", uld_volume_dict)
 
 # import 

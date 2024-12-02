@@ -121,7 +121,7 @@ class OptimalCargoManagement(object):
             if package.loaded is None:
                 unloaded_pkd_ids.append(package_id)
         # random.shuffle(unloaded_pkd_ids)
-        sorted_unloaded_pkd_ids = sorted(unloaded_pkd_ids, key = lambda x: self.packages[x].delay, reverse = True)
+        sorted_unloaded_pkd_ids = sorted(unloaded_pkd_ids, key = lambda x: self.packages[x].delay/(max([self.packages[x].height,self.packages[x].width,self.packages[x].length])), reverse = True)
         # for package_id, package in self.packages.items():
             # print(package_id)
         for package_id in sorted_unloaded_pkd_ids:
@@ -134,8 +134,9 @@ class OptimalCargoManagement(object):
                     r = uld.fit_in_package(package)
                     print(r)
                     extra_count += 1
+                    print(self.cost())
                     if r: break
-                print(package)
+                # print(package)
     
     def shift_priority_packages(self):
         uld_priority_count = {}
@@ -148,25 +149,65 @@ class OptimalCargoManagement(object):
         print(f"ULD priority count: {uld_priority_count}")  
         #lowest priority uld
         # zero_priority_count_uld = min(uld_priority_count, key = uld_priority_count.get)
+        if len(uld_priority_count) == 5:
+            all_ulds = set(self.ulds.keys())
+            lowest_priority_count_uld = min(uld_priority_count, key = uld_priority_count.get)
+            zero_priority_count_uld = all_ulds - set(uld_priority_count.keys())
+            zero_priority_count_uld = list(zero_priority_count_uld)[0]
+            priority_packages_in_lowest_priority_uld = []
+            for package_id, package in self.packages.items():
+                if package.loaded == lowest_priority_count_uld and package.priority:
+                    priority_packages_in_lowest_priority_uld.append(package)
+            print(f"Priority packages in lowest priority uld: {len(priority_packages_in_lowest_priority_uld)}")
+            print(f"{priority_packages_in_lowest_priority_uld}")
+            print(lowest_priority_count_uld, zero_priority_count_uld)
+            for uld_id, uld in self.ulds.items():
+                if uld_id != lowest_priority_count_uld and uld_id != zero_priority_count_uld:
+                    uld.create_cuboid_environment()
+            for package in priority_packages_in_lowest_priority_uld:
+                package.loaded = None
+                self.ulds[lowest_priority_count_uld].remove_package(package)
+                for uld_id, uld in self.ulds.items():
+                    if uld_id != lowest_priority_count_uld and uld_id != zero_priority_count_uld:
+                        r = uld.fit_in_package(package)
+                        if r:
+                            print(f"Package {package.package_id} shifted from {lowest_priority_count_uld} to {uld_id}")
+                            # uld_priority_count[uld_id] += 1
+                            if uld_id not in uld_priority_count:
+                                uld_priority_count[uld_id] = 1
+                            else:
+                                uld_priority_count[uld_id] += 1
+                            break
+                if package.loaded is None:
+                    print(f"Package {package.package_id} not shifted")
+                    return False
+        
+        
+        uld_priority_count = {}
+        for package_id, package in self.packages.items():
+            if package.loaded is not None and package.priority:
+                if package.loaded in uld_priority_count:
+                    uld_priority_count[package.loaded] += 1
+                else:
+                    uld_priority_count[package.loaded] = 1
+        print(f"ULD priority count after 1 round: {uld_priority_count}")
         all_ulds = set(self.ulds.keys())
         lowest_priority_count_uld = min(uld_priority_count, key = uld_priority_count.get)
-        zero_priority_count_uld = all_ulds - set(uld_priority_count.keys())
-        zero_priority_count_uld = list(zero_priority_count_uld)[0]
-        priority_packages_in_lowest_priority_uld = []
+        zero_priority_count_ulds = all_ulds - set(uld_priority_count.keys())
+        zero_priority_count_uld = list(zero_priority_count_ulds)
+        
+        remaining_ulds = all_ulds - set([lowest_priority_count_uld]) - zero_priority_count_ulds
+        
+        list_of_packages_in_lowest_priority_uld = []
         for package_id, package in self.packages.items():
-            if package.loaded == lowest_priority_count_uld and package.priority:
-                priority_packages_in_lowest_priority_uld.append(package)
-        print(f"Priority packages in lowest priority uld: {len(priority_packages_in_lowest_priority_uld)}")
-        print(f"{priority_packages_in_lowest_priority_uld}")
-        print(lowest_priority_count_uld, zero_priority_count_uld)
-        for uld_id, uld in self.ulds.items():
-            if uld_id != lowest_priority_count_uld and uld_id != zero_priority_count_uld:
-                uld.create_cuboid_environment()
-        for package in priority_packages_in_lowest_priority_uld:
+            if package.loaded == lowest_priority_count_uld:
+                list_of_packages_in_lowest_priority_uld.append(package)
+        print(f"Packages in lowest priority uld: {len(list_of_packages_in_lowest_priority_uld)}")
+        for package in list_of_packages_in_lowest_priority_uld:
             package.loaded = None
             self.ulds[lowest_priority_count_uld].remove_package(package)
             for uld_id, uld in self.ulds.items():
-                if uld_id != lowest_priority_count_uld and uld_id != zero_priority_count_uld:
+                if uld_id in remaining_ulds:
                     r = uld.fit_in_package(package)
                     if r:
                         print(f"Package {package.package_id} shifted from {lowest_priority_count_uld} to {uld_id}")
@@ -175,6 +216,9 @@ class OptimalCargoManagement(object):
             if package.loaded is None:
                 print(f"Package {package.package_id} not shifted")
                 return False
+            
+
+            
         return True      
                 
                 
@@ -238,7 +282,7 @@ if __name__ == "__main__":
         priority_ordering, non_priority_ordering = ocm.create_package_ordering()
         ocm.reorient_packages()
         #fit priority packages first
-        ocm.fit(optional_ordering=priority_ordering)
+        ocm.fit(optional_ordering=priority_ordering, selected_ulds=['U6', 'U5', 'U4', 'U3', 'U2', 'U1'])
         cost_priority = ocm.cost(only_priority=True)
         bb = False
         if cost_priority < 30000:
@@ -246,14 +290,20 @@ if __name__ == "__main__":
             bb = ocm.shift_priority_packages()
             
             show = True
+            
+        # bb = ocm.shift_priority_packages()
         if ocm.cost(only_priority=True) >= 25000 or not bb:
             continue
         print(ocm.cost())
         unused_uld_ids = ocm.unused_uld_ids()
+        
         for uld_id, uld in ocm.ulds.items():
             if uld_id in unused_uld_ids:
                 uld.refresh()
         ocm.fit(optional_ordering=non_priority_ordering, selected_ulds=unused_uld_ids)
+        
+        
+        
         print(ocm.cost())
         
         ocm.extra_additions()
