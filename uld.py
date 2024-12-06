@@ -17,7 +17,7 @@ class ULD:
         self.existing_cuboid_corners = []
         
     def cost(self, K):
-        for package_id, package in self.packages.items():
+        for package in self.packages.values():
             if package.priority: return K
         return 0
     
