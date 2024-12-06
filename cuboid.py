@@ -2,8 +2,8 @@ import numpy as np
 
 class Cuboid:
     def __init__(self, min_corner, max_corner):
-        self.min_corner = min_corner  # (x_min, y_min, z_min)
-        self.max_corner = max_corner  # (x_max, y_max, z_max)
+        self.min_corner = min_corner 
+        self.max_corner = max_corner
 
     def intersects(self, other):
         """Check if this cuboid intersects with another cuboid."""
@@ -28,6 +28,21 @@ class Cuboid:
         """Update the cuboid's position based on origin and size."""
         self.min_corner = origin
         self.max_corner = tuple(origin[i] + size[i] for i in range(3))
+        
+    def cuboid_corners(self):
+        height = self.max_corner[2] - self.min_corner[2]
+        width = self.max_corner[1] - self.min_corner[1]
+        length = self.max_corner[0] - self.min_corner[0]
+        return [
+            self.min_corner,
+            (self.min_corner[0], self.min_corner[1], self.min_corner[2] + height),
+            (self.min_corner[0], self.min_corner[1] + width, self.min_corner[2]),
+            (self.min_corner[0], self.min_corner[1] + width, self.min_corner[2] + height),
+            (self.min_corner[0] + length, self.min_corner[1], self.min_corner[2]),
+            (self.min_corner[0] + length, self.min_corner[1], self.min_corner[2] + height),
+            (self.min_corner[0] + length, self.min_corner[1] + width, self.min_corner[2]),
+            self.max_corner
+        ]
 
 
 def find_free_spaces(larger_cuboid, existing_cuboids):
@@ -73,19 +88,42 @@ def split_free_space(free_space, occupied_cuboid):
 
     return result
 
-def find_placement(new_cuboid_size, larger_cuboid, existing_cuboids):
-    free_spaces = find_free_spaces(larger_cuboid, existing_cuboids)
-    new_cuboid = Cuboid((0, 0, 0), new_cuboid_size)
 
-    for free_space in free_spaces:
-        # Check if the new cuboid can fit inside this free space
-        for dim in range(3):
-            start = free_space.min_corner[dim]
-            end = free_space.max_corner[dim] - new_cuboid_size[dim]
-            if start > end:
+
+# def find_placement(new_cuboid_size, larger_cuboid, existing_cuboids):
+#     free_spaces = find_free_spaces(larger_cuboid, existing_cuboids)
+#     new_cuboid = Cuboid((0, 0, 0), new_cuboid_size)
+
+#     for free_space in free_spaces:
+#         # Check if the new cuboid can fit inside this free space
+#         for dim in range(3):
+#             start = free_space.min_corner[dim]
+#             end = free_space.max_corner[dim] - new_cuboid_size[dim]
+#             if start > end:
+#                 break
+#         else:
+#             # Found a free space where the new cuboid can fit
+#             return free_space.min_corner
+
+#     return None
+
+def find_placement(new_cuboid_size, larger_cuboid, existing_cuboids):
+    all_existing_corners = []
+    for cuboid in existing_cuboids:
+        all_existing_corners.extend(cuboid.cuboid_corners())
+    possible_corners = []
+    for possible_corner in all_existing_corners:
+        new_cuboid = Cuboid(possible_corner, tuple(possible_corner[i] + new_cuboid_size[i] for i in range(3)))
+        if not new_cuboid.fits_inside(larger_cuboid):
+            continue
+        for cuboid in existing_cuboids:
+            if new_cuboid.intersects(cuboid):
                 break
         else:
-            # Found a free space where the new cuboid can fit
-            return free_space.min_corner
-
-    return None
+            possible_corners.append(possible_corner)
+            
+    if possible_corners:
+        return possible_corners[np.random.randint(len(possible_corners))]
+    else:
+        return None
+    
