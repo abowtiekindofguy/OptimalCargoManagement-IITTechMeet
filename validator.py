@@ -11,9 +11,11 @@ def validate_uld(uld, packages):
         package_cuboid_list.append(package_cuboid)
     for i in range(len(package_cuboid_list)):
         if not package_cuboid_list[i].fits_inside(uld_cuboid):
+            print(f"Package {i} does not fit inside ULD {uld_cuboid}")
             return False
         for j in range(i+1, len(package_cuboid_list)):
             if package_cuboid_list[i].intersects(package_cuboid_list[j]):
+                print(f"Package {i} intersects with Package {j}")
                 return False
             
     return True
@@ -21,7 +23,7 @@ def validate_uld(uld, packages):
 class SolutionValidator:
     def __init__(self, solution):
         self.solution_packages = solution.packages
-        self.solution_ulds = solution.uld
+        self.solution_ulds = solution.ulds
         self.valid = False
         self.package_collection = None
 
@@ -34,8 +36,8 @@ class SolutionValidator:
                 
         for uld_id in package_collection:
             uld = self.solution_ulds[uld_id]
-            validate_uld = validate_uld(uld, package_collection[uld_id])
-            if not validate_uld:
+            validate_uld_bool = validate_uld(uld, package_collection[uld_id])
+            if not validate_uld_bool:
                 self.valid = False
                 return
             
