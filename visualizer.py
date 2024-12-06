@@ -2,115 +2,11 @@ import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from random import shuffle
-
-class ULD:
-    def __init__(self, uld_id, length, width, height, capacity):
-        self.uld_id = uld_id
-        self.length = length
-        self.width = width
-        self.height = height
-        self.capacity = capacity 
-        self.used_volume = 0
-        self.used_weight = 0
-        self.packages=[]
-
-    def __repr__(self):
-        return f"ULD({self.uld_id}, {self.length}, {self.width}, {self.height}, {self.capacity})"
+from package import Package
+from uld import ULD
+from io_utils import parse_input, parse_output
 
 
-class Package:
-    def __init__(self, package_id, length, width, height, weight, priority, delay):
-        self.package_id = package_id
-        self.length = length
-        self.width = width
-        self.height = height
-        self.weight = weight
-        self.priority = priority
-        self.delay = delay
-
-    def __repr__(self):
-        return f"Package({self.package_id}, {self.length}, {self.width}, {self.height}, {self.weight}, {self.priority}, {self.delay})"
-
-
-def parse_input(file):
-    with open(file, 'r') as file:
-        lines = file.readlines()
-    uld_count = int(lines[0]) 
-    ulds = {}
-    line_index = 1
-    for _ in range(uld_count):
-        uld_data = lines[line_index].split(",")
-        uld_id=uld_data[0]
-        length=uld_data[1]
-        width=uld_data[2]
-        height=uld_data[3]
-        capacity=uld_data[4]
-        ulds[uld_id] = ULD(uld_id, int(length), int(width), int(height), int(capacity))
-        line_index += 1
-
-    package_count = int(lines[line_index]) 
-    packages = {}
-    line_index += 1
-    for _ in range(package_count):
-        package_data = lines[line_index].split(",")
-        package_id, length, width, height, weight, priority, delay = package_data
-        priority = priority.strip()
-        weight = int(weight)
-        delay = delay
-        packages[package_id] = Package(package_id, int(length), int(width), int(height), weight, priority, delay)
-        line_index += 1
-
-    K = int(lines[line_index]) 
-
-    return ulds, packages, K
-
-# TODO : First/Best Fit Implementation is left
-# def pack_ulds(ulds, packages, k, out): 
-#     packages.sort(key=lambda p: (p.priority, -p.length * p.width * p.height))
-
-#     for package in packages:
-#         placed = False
-#         for uld in ulds:
-#             if uld.used_volume + package.length * package.width * package.height <= uld.capacity and uld.used_weight + package.weight <= k:
-#                 uld.packages.append((package.package_id, uld.uld_id, len(uld.packages), 0, 0, 0, package.length, package.width, package.height))
-#                 uld.used_volume += package.length * package.width * package.height
-#                 uld.used_weight += package.weight
-#                 placed = True
-#                 break
-#         if not placed:
-#             ulds.append(ULD(f"ULD{len(ulds) + 1}", package.length, package.width, package.height, k))
-#             ulds[-1].packages.append((package.package_id, ulds[-1].uld_id, 0, 0, 0, package.length, package.width, package.height))
-#             ulds[-1].used_volume = package.length * package.width * package.height
-#             ulds[-1].used_weight = package.weight
-
-#     total_volume = sum(uld.used_volume for uld in ulds)
-#     total_weight = sum(uld.used_weight for uld in ulds)
-#     num_ulds = len(ulds)
-
-#     output = []
-#     for uld in ulds:
-#         for package_id, uld_id, x, y, z, length, width, height in uld.packages:
-#             output.append((package_id, uld_id, x, y, z, length, width, height))
-#     with open(out, 'w') as file:
-#         file.write(f"{total_volume},{total_weight},{num_ulds}")
-#         file.write("\n")
-#         for line in output:
-#             file.write(",".join(map(str, line)))
-#             file.write("\n")
-#     return 
-
-def parse_output(file_path):
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-    total_cost, total_packages, priority_ULDs = map(int, lines[0].strip().split(','))
-    packages = []
-    for line in lines[1:]:
-        parts = line.strip().split(',')
-        package_id = parts[0]
-        uld_id = parts[1]
-        coords = tuple(map(int, parts[2:]))
-        packages.append((package_id, uld_id, coords))
-    return total_cost, total_packages, priority_ULDs, packages
 
 
 def print_summary(ulds, packages):
