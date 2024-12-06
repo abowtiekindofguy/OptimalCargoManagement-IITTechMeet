@@ -14,8 +14,7 @@ class ULD:
         self.x_filled, self.y_filled, self.z_filled = 0, 0, 0
         self.last_plane_y = 0
         self.last_filled_row_z = 0
-        self.existing_cuboids = []
-        # self.current_filled_row_z = 0
+        self.existing_cuboid_corners = []
         
     def cost(self, K):
         for package_id, package in self.packages.items():
@@ -29,16 +28,10 @@ class ULD:
         self.x_filled, self.y_filled, self.z_filled = 0, 0, 0
         self.last_plane_y = 0
         self.last_filled_row_z = 0
-        self.existing_cuboids = []
-        # self.current_filled_row_z = 0
+        self.existing_cuboid_corners = []
     
     def add_package(self,package):
         self.packages[package.package_id]=package
-
-    def remove_package(self,package_id):
-        # self.packages[package_id].loaded = None
-        # del self.packages[package_id]
-        pass   
 
     def __repr__(self):
         return f"ULD({self.uld_id}, {self.length}, {self.width}, {self.height}, {self.capacity})"
@@ -91,29 +84,25 @@ class ULD:
             return False
         
     def create_cuboid_environment(self):
+        self.existing_cuboid_corners = []
         for package_id, box_package in self.packages.items():
-            self.existing_cuboids.append(Cuboid(box_package.corners[0], box_package.corners[7]))
-        # return self.existing_cuboids 
+            package_cuboid = Cuboid(box_package.corners[0], box_package.corners[7])
+            package_corners = package_cuboid.cuboid_corners()
+            self.existing_cuboid_corners.extend(package_corners)
             
     def fit_in_package(self, package):
         larger_uld_cuboid = Cuboid((0, 0, 0), (self.length, self.width, self.height))
-        # new_cuboid_size = (package.length, package.width, package.height)
-        cuboid_sizes = [(package.length, package.width, package.height), (package.width, package.length, package.height), (package.height, package.length, package.width), (package.height, package.width, package.length), (package.width, package.height, package.length), (package.length, package.height, package.width)]
-        # existing_cuboids = []
-        # for package_id, box_package in self.packages.items():
-        #     existing_cuboids.append(Cuboid(box_package.corners[0], box_package.corners[7]))
-        #try different orientations of new_cuboid_size
-        for new_cuboid_size in cuboid_sizes:
-            a = find_placement(new_cuboid_size, larger_uld_cuboid, self.existing_cuboids)
-            if a:
-                package.length, package.width, package.height = new_cuboid_size
-                package_reference_corner = a
+        possible_cuboid_dimensions = [(package.length, package.width, package.height), (package.width, package.length, package.height), (package.height, package.length, package.width), (package.height, package.width, package.length), (package.width, package.height, package.length), (package.length, package.height, package.width)]
+        for cuboid_dimension in possible_cuboid_dimensions:
+            possible_placement = find_placement(cuboid_dimension, larger_uld_cuboid, self.existing_cuboid_corners)
+            if possible_placement:
+                package.length, package.width, package.height = cuboid_dimension
+                package_reference_corner = possible_placement
                 package.generate_corners(package_reference_corner)
                 self.packages[package.package_id]=package
                 package.loaded = self.uld_id
-                self.existing_cuboids.append(Cuboid(package.corners[0], package.corners[7]))
+                new_package_cuboid = Cuboid(package.corners[0], package.corners[7])
+                self.existing_cuboid_corners.extend(new_package_cuboid.cuboid_corners())
                 return package.loaded
-            # else:
-            #     return False
         return False
         
