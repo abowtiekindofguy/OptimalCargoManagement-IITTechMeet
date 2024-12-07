@@ -17,7 +17,7 @@ def add_package_to_plot(ax, coords, package_id, color):
             [2, 3, 7, 6], [1, 2, 6, 5], [0, 3, 7, 4]
         ]
     ]
-    ax.add_collection3d(Poly3DCollection(faces, facecolors=color, linewidths=1, edgecolors='black', alpha=0.5))
+    ax.add_collection3d(Poly3DCollection(faces, facecolors=color, linewidths=1, edgecolors='black', alpha=0.2))
     ax.text((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, package_id, fontsize=6)
 
 
@@ -48,14 +48,14 @@ def visualize_packing(packages, packages1, ulds, output_file, rows=2, cols=3, co
     priority_color, economy_color = "green", "pink"
     total_priority, total_economy = 0, 0
 
-    fig = plt.figure(figsize=(15, 10)) if combined else None
+    fig = plt.figure(figsize=(15, 10), num="Optimal Cargo Management - FedEx") if combined else None
     plot_idx = 1
 
     for uld_id, uld_packages in uld_groups.items():
         if not uld_packages or uld_id == "NONE":
             continue
 
-        ax = fig.add_subplot(rows, cols, plot_idx, projection='3d') if combined else plt.figure().add_subplot(111, projection='3d')
+        ax = fig.add_subplot(rows, cols, plot_idx, projection='3d') if combined else plt.figure(num="Optimal Cargo Management - FedEx").add_subplot(111, projection='3d')
         plot_idx += 1
 
         uld_dims = (ulds[uld_id].length, ulds[uld_id].width, ulds[uld_id].height)
