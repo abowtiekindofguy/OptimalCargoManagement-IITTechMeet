@@ -74,7 +74,8 @@ def visualize_packing(packages, packages1, ulds, output_file, rows=2, cols=3, co
 
     if combined:
         plt.tight_layout()
-        plt.savefig(f"{output_file}_combined.png")
+        solution_stripped_txt = output_file.split(".")[0]
+        plt.savefig(f"{solution_stripped_txt}.png")
         plt.show()
 
     print(f"Total Priority Packages: {total_priority}, Economy Packages: {total_economy}")

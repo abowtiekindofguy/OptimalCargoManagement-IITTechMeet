@@ -1,15 +1,8 @@
 import math
 import random
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from copy import deepcopy
-from uld import ULD
-from cuboid import Cuboid
-from package import Package
 from validator import *
-import itertools
 from genetic_to_package import *
 
 class EMS:
