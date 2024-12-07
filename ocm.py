@@ -111,7 +111,7 @@ class OptimalCargoManagement(object):
             
     def extra_additions(self):
         for uld_id, uld in self.ulds.items():
-            print(f"ULD {uld_id} creating cuboid environment")
+            # print(f"ULD {uld_id} creating cuboid environment")
             uld.create_cuboid_environment()
         extra_count = 0
         unloaded_pkd_ids = []
@@ -136,7 +136,7 @@ class OptimalCargoManagement(object):
                     # print(self.cost())
                     if r:
                         extra_count += 1
-                        print(f"Package {package_id} loaded in ULD {r}, remaining = {num_unloaded - extra_count}")
+                        # print(f"Package {package_id} loaded in ULD {r}, remaining = {num_unloaded - extra_count}")
                         break
                 # print(package)   
                 

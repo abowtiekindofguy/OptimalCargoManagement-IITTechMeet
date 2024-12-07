@@ -12,8 +12,8 @@ from validator import *
 
 ### Classes ###
 
-random.seed(123)
-np.random.seed(123)
+# random.seed(123)
+# np.random.seed(123)
 
 class EMS:
     def __init__(self, origin, length, height, width):
@@ -496,7 +496,7 @@ def plot_3d_objects(objects):
         w = obj.width
         h = obj.height
         
-        print(obj)
+        # print(obj)
         
         # Define the vertices of the cuboid
         # vertices = [
@@ -709,12 +709,12 @@ def PerformBoxPacking(containers,
     elitism_chromosomes_fitness = []
 
     for iter_i in range(1, n_iter+1):
-        if verbose:
-            print('Iteration:', iter_i, 'out of', n_iter)
+        # if verbose:
+            # print('Iteration:', iter_i, 'out of', n_iter)
 
         for chrom_i in range(len(population)):
-            if verbose:
-                print('  Chromosome:', chrom_i+1, 'out of', len(population))
+            # if verbose:
+                # print('  Chromosome:', chrom_i+1, 'out of', len(population))
             chromosome = population[chrom_i]
             packing_solution = PackBoxes(boxes, containers, chromosome["BPS"], chromosome["CLS"])
             chromosome_fitness[chrom_i] = CalculateFitness(packing_solution)

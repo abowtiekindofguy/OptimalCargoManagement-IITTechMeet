@@ -43,6 +43,17 @@ class SolutionValidator:
                 self.valid = False
                 return
             
+        for uld_id in package_collection:
+            uld = self.solution_ulds[uld_id]
+            uld_max_weight = uld.capacity
+            package_weight = sum([package.weight for package in package_collection[uld_id]])
+            # for package in package_collection[uld_id]:
+            if package_weight > uld_max_weight:
+                print(f"ULD {uld_id} has weight {package_weight} and capacity {uld_max_weight}")
+                self.valid = False
+                return
+                
+            
         self.valid = True
         return
         
