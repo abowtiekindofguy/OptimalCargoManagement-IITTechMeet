@@ -152,8 +152,10 @@ def CheckIfEMSisInsideOtherEMS(ems_to_check, ems):
     ems_is_inside = np.all(ems_to_check_vertex1 >= ems_vertex1) and np.all(ems_to_check_vertex2 <= ems_vertex2)
     return ems_is_inside
 
-def EliminateEMSList(given_ems_list):
-    ems_list = deepcopy(given_ems_list)
+# Can Change Here #1
+def EliminateEMSList(ems_list):
+    # ems_list = deepcopy(given_ems_list)
+    # ems_list = given_ems_list
     sequence = list(range(len(ems_list)))
     ind_remove = []
 
@@ -177,15 +179,17 @@ def CheckIfBoxEqualsEMS(box, ems):
                     box.height == ems.height and
                     box.width == ems.width)
     return BoxEqualsEMS
+#Not getting should be changed or not
+def UpdateEMS(ems_list,box):
+    # ems_list = deepcopy(given_ems_list)
+    # box = deepcopy(given_box)
 
-def UpdateEMS(given_ems_list,given_box):
-    ems_list = deepcopy(given_ems_list)
-    box = deepcopy(given_box)
     new_ems_list = ems_list[:]
     ind_to_remove = []
 
     for i in range(len(ems_list)):
-        ems = deepcopy(ems_list[i])
+        # ems = deepcopy(ems_list[i])
+        ems = ems_list[i]
         new_ems = CreateEMS(ems, box)
         if len(new_ems) != 0 or CheckIfBoxEqualsEMS(box, ems):
             ind_to_remove.append(i)
@@ -215,9 +219,9 @@ def CheckIfBoxFitsIntoEMS(box, ems):
     fit3 = (box.width <= ems.length and box.height <= ems.height and box.length <= ems.width)
     return (fit1 or fit2 or fit3)
 
-def PerformPlacementSelection(given_box, given_ems):
-    box = deepcopy(given_box)
-    ems = deepcopy(given_ems)
+def PerformPlacementSelection(box,ems):
+    # box = deepcopy(given_box)
+    # ems = deepcopy(given_ems)
     possible_rotations = []
     possible_margins = []
 
@@ -268,6 +272,7 @@ def PackBoxes(boxes, containers, box_packing_sequence, container_loading_sequenc
     for c in containers:
         # each container solution is [container, possibly boxes...]
         packing_solution.append([deepcopy(c)])
+        # packing_solution.append([c])
 
     placed_boxes = [False]*m
 
@@ -290,7 +295,8 @@ def PackBoxes(boxes, containers, box_packing_sequence, container_loading_sequenc
                         # write placement in packing solution
                         packing_solution[container_ind].append(new_box)
                         # update EMS
-                        packing_solution[container_ind][0].ems = deepcopy(UpdateEMS(packing_solution[container_ind][0].ems, new_box))
+                        # packing_solution[container_ind][0].ems = deepcopy(UpdateEMS(packing_solution[container_ind][0].ems, new_box))
+                        packing_solution[container_ind][0].ems = UpdateEMS(packing_solution[container_ind][0].ems, new_box)
                         placed_boxes[box_ind] = True
                         break
     return packing_solution
@@ -342,7 +348,8 @@ def CustomChromosomeInitialization(boxes, n_containers):
     ind_by_volume = sorted(range(len(boxes)), key=lambda i: boxes_volume[i], reverse=True)
     chromosomes.append({"BPS":[i+1 for i in ind_by_volume], "CLS":random.sample(range(1,n_containers+1), n_containers)})
 
-    return deepcopy(chromosomes)
+    # return deepcopy(chromosomes)
+    return chromosomes
 
 def InitializePopulation(population_size, n_containers, boxes):
     n_boxes = len(boxes)
@@ -364,10 +371,10 @@ def PerformSelection(population, fitness):
     population_size = len(population)
     new_population = []
     for _ in range(population_size):
-        population_copy = deepcopy(population)
+        # population_copy = deepcopy(population)
         cind = random.sample(range(population_size), 2)
         better = cind[0] if fitness[cind[0]] < fitness[cind[1]] else cind[1]
-        new_population.append(population_copy[better])
+        new_population.append(population[better])
     return new_population
 
 def MutateChromosome(chromosome):
@@ -391,8 +398,9 @@ def MutateChromosome(chromosome):
 
     return {"BPS":BPS, "CLS":CLS}
 
-def PerformMutation(given_population, mutation_prob):
-    population = deepcopy(given_population)
+def PerformMutation(population, mutation_prob):
+    # population = deepcopy(given_population)
+
     population_size = len(population)
     new_population = []
     for chrom in population:
@@ -402,9 +410,9 @@ def PerformMutation(given_population, mutation_prob):
             new_population.append(chrom)
     return new_population
 
-def CrossoverChromosomes(gparent1, gparent2):
-    parent1 = deepcopy(gparent1)
-    parent2 = deepcopy(gparent2)
+def CrossoverChromosomes(parent1, parent2):
+    # parent1 = deepcopy(gparent1)
+    # parent2 = deepcopy(gparent2)
     BPS1 = parent1["BPS"]
     CLS1 = parent1["CLS"]
     BPS2 = parent2["BPS"]
@@ -453,9 +461,9 @@ def CrossoverChromosomes(gparent1, gparent2):
 
     return {"BPS":child_BPS, "CLS":child_CLS}
 
-def PerformCrossover(given_mating_pool, given_crossover_prob):
-    mating_pool = deepcopy(given_mating_pool)
-    crossover_prob = deepcopy(given_crossover_prob)
+def PerformCrossover(mating_pool, crossover_prob):
+    # mating_pool = deepcopy(given_mating_pool)
+    # crossover_prob = deepcopy(given_crossover_prob)
     next_population = []
 
     while len(mating_pool) > 0:
@@ -751,7 +759,7 @@ class ocm:
         self.packages = packages
 
 
-def get_packing_genetic_algorithm(container_dimensions, package_dimensions, n_iters=5, population_size=20):
+def get_packing_genetic_algorithm(container_dimensions, package_dimensions, n_iters=1, population_size=2):
     containers = [Container(length=c[0], width=c[1], height=c[2]) for c in container_dimensions]
     boxes = [Box(length=b[0], width=b[1], height=b[2]) for b in package_dimensions]
     
