@@ -11,4 +11,7 @@ run:
 
 setup: install-dependencies
 
+visualize:
+	@python3 visualizer.py $(input) $(output)
+
 .PHONY: install-dependencies run setup

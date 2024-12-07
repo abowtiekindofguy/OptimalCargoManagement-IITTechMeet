@@ -89,4 +89,4 @@ def visualize(input_file, output_file, show=False):
 
 
 if __name__ == "__main__":
-    visualize(sys.argv[1], sys.argv[2], show=False)
+    visualize(sys.argv[1], sys.argv[2], show=True)

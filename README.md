@@ -59,6 +59,22 @@ make run input=data/input.txt output=data/output.txt verbose=1
 
 This command will execute `main.py` with the provided arguments. Any logs will be saved to `log.txt`.
 
+### Visualizing the Output
+
+To visualize the output, you can use the following command:
+
+```bash
+make visualize input=<input_file_path> output=<output_file_path>
+```
+
+For example:
+
+```bash
+make visualize input=data/input.txt output=data/output.txt
+```
+
+This command will display the output using a visualization tool powered by MatPlotLib.
+
 ### Troubleshooting
 
 - If the `input`, `output`, or `verbose` arguments are not provided, the script will display an error message indicating which argument is missing.
