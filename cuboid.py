@@ -1,5 +1,5 @@
 import numpy as np
-
+import random
 class Cuboid:
     def __init__(self, min_corner, max_corner):
         self.min_corner = min_corner 
@@ -45,19 +45,34 @@ def find_placement(new_cuboid_size, larger_cuboid, existing_cuboids):
     all_existing_corners = []
     for cuboid in existing_cuboids:
         all_existing_corners.extend(cuboid.cuboid_corners())
-    possible_corners = []
+    possible_corners_output = []
     for possible_corner in all_existing_corners:
-        new_cuboid = Cuboid(possible_corner, tuple(possible_corner[i] + new_cuboid_size[i] for i in range(3)))
-        if not new_cuboid.fits_inside(larger_cuboid):
-            continue
-        for cuboid in existing_cuboids:
-            if new_cuboid.intersects(cuboid):
-                break
-        else:
-            possible_corners.append(possible_corner)
+        possible_corners = [
+            possible_corner,
+            tuple(possible_corner[i] - new_cuboid_size[i] for i in range(3)),
+            (possible_corner[0], possible_corner[1], possible_corner[2] - new_cuboid_size[2]),
+            (possible_corner[0]-new_cuboid_size[0], possible_corner[1]-new_cuboid_size[1], possible_corner[2]),
+            (possible_corner[0], possible_corner[1]-new_cuboid_size[1], possible_corner[2]),
+            (possible_corner[0]-new_cuboid_size[0], possible_corner[1], possible_corner[2]),
+            (possible_corner[0], possible_corner[1], possible_corner[2]-new_cuboid_size[2]),
+            (possible_corner[0]-new_cuboid_size[0], possible_corner[1], possible_corner[2]-new_cuboid_size[2]),
+        ]
+        random.shuffle(possible_corners)   
+        fitted = False 
+        for pc in possible_corners:
+            new_cuboid = Cuboid(pc, tuple(pc[i] + new_cuboid_size[i] for i in range(3)))
+            if not new_cuboid.fits_inside(larger_cuboid):
+                continue
+            for cuboid in existing_cuboids:
+                if new_cuboid.intersects(cuboid):
+                    break
+            else:
+                possible_corners_output.append(pc)
+                fitted = True
             
-    if possible_corners:
-        return possible_corners[np.random.randint(len(possible_corners))]
+            
+    if possible_corners_output:
+        return possible_corners_output[np.random.randint(len(possible_corners_output))]
     else:
         return None
     

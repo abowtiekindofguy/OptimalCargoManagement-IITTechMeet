@@ -1,5 +1,6 @@
 import random   
 from package import crainic_sorting
+from genetic import GeneticAlgorithm
 
 class OptimalCargoManagement(object):
     def __init__(self, ulds, packages, K, verbose = False):
@@ -7,6 +8,8 @@ class OptimalCargoManagement(object):
         self.packages = packages
         self.K = K
         self.package_ordering = None
+        self.non_priority_ordering = None
+        self.priority_ordering = None
         self.verbose = verbose
         
     def log(self, message):
@@ -31,9 +34,7 @@ class OptimalCargoManagement(object):
             if not package.priority and package.loaded is None:
                 economy_cost += package.delay
         total_cost = priority_cost * self.K + economy_cost
-        
-        # self.log(f"Priority cost: {priority_cost}, Economy cost: {economy_cost}, Total cost: {total_cost}")
-        
+            
         if only_priority: return priority_cost
         else: return total_cost
         
@@ -109,7 +110,8 @@ class OptimalCargoManagement(object):
         non_priority_ordering = crainic_sorting(packages_list = non_priority_packages_list, group_on_dimensions=True)
         
         self.package_ordering = priority_ordering + non_priority_ordering
-        
+        self.priority_ordering = priority_ordering
+        self.non_priority_ordering = non_priority_ordering
         return priority_ordering, non_priority_ordering
         
     def reorient_packages(self):
@@ -119,7 +121,7 @@ class OptimalCargoManagement(object):
             package_to_reorient = self.packages[package_id]
             package_to_reorient.reorient(order_z_against)
             
-    def adhoc_additions(self):
+    def adhoc_additions(self, random_shuffle = False):
         for uld in self.ulds.values():
             uld.create_cuboid_environment()
         
@@ -128,6 +130,9 @@ class OptimalCargoManagement(object):
             if package.loaded is None: unloaded_pkd_ids.append(package.package_id)
 
         sorted_unloaded_pkd_ids = sorted(unloaded_pkd_ids, key = lambda x: self.packages[x].delay/(max([self.packages[x].height,self.packages[x].width,self.packages[x].length])), reverse = True)
+              
+        if random_shuffle:
+            random.shuffle(sorted_unloaded_pkd_ids)  
                 
         adhoc_loaded_packages_count = 0
         
@@ -148,3 +153,84 @@ class OptimalCargoManagement(object):
         unused_uld_ids = set(self.ulds.keys()) - used_ulds
         
         return unused_uld_ids
+    
+    def run_genetic_algorithm(self):
+        containers_data = []
+        packages_data = []
+        for uld in self.ulds.values():
+            if uld.uld_id in ['U4', 'U5', 'U6']:
+                containers_data.append([uld.length, uld.width, uld.height, uld.uld_id])
+            
+        for package in self.packages.values():
+            if package.priority:
+                packages_data.append([package.length, package.width, package.height, package.package_id])
+                
+        priority_ga_instance = GeneticAlgorithm(uld_dimensions=containers_data, package_dimensions=packages_data)
+
+        priority_ga_solution = priority_ga_instance.run_genetic_algorithm()
+        
+        for package in self.packages.values():
+            if package.priority:
+                parent_uld = priority_ga_solution.get_parent_uld(package_id=package.package_id)
+                ref_corner = priority_ga_solution.get_package_position(package_id=package.package_id)
+                pkg_orientation = priority_ga_solution.get_package_orientation(package_id=package.package_id)
+                
+                package.loaded = parent_uld
+                package.length, package.width, package.height = pkg_orientation[0], pkg_orientation[1], pkg_orientation[2]
+                package.generate_corners(ref_corner)
+                
+        unused_uld_ids = self.unused_uld_ids()
+        
+        for uld_id, uld in self.ulds.items():
+            if uld_id in unused_uld_ids:
+                uld.refresh()
+        
+    
+        non_priority_delay_dict = {}
+        non_priority_volume_dict = {}
+    
+        
+        for package in self.packages.values():
+            if not package.priority:
+                non_priority_delay_dict[package.package_id] = package.delay
+                non_priority_volume_dict[package.package_id] = package.length * package.width * package.height
+                
+        economy_pkg_ordering = self.non_priority_ordering
+        economy_pkg_ordering.sort(key=lambda x: (non_priority_delay_dict[x[0]]) ** 1 / (non_priority_volume_dict[x[0]]) ** 1.2, reverse=True)
+        economy_pkg_ordering = economy_pkg_ordering[:150]
+        economy_pkg_ordering = [x[0] for x in economy_pkg_ordering]
+        
+        random.shuffle(economy_pkg_ordering)
+        
+        eco_containers_data = []
+        eco_packages_data = []
+        
+        for uld_id, uld in self.ulds.items():
+            if uld_id in unused_uld_ids:
+                eco_containers_data.append([uld.length, uld.width, uld.height, uld_id])
+            
+        for package_id, package in self.packages.items():
+            if not package.priority and package.package_id in economy_pkg_ordering:
+                eco_packages_data.append([package.length, package.width, package.height, package.package_id])
+        
+        
+        economy_ga_instance = GeneticAlgorithm(uld_dimensions=eco_containers_data, package_dimensions=eco_packages_data)
+        eco_ga_solution = economy_ga_instance.run_genetic_algorithm()   
+        
+        for package in self.packages.values():
+            if not package.priority and package.package_id in economy_pkg_ordering:
+                if not eco_ga_solution.is_placed(package_id=package.package_id):
+                    continue
+                parent_uld = eco_ga_solution.get_parent_uld(package_id=package.package_id)
+                ref_corner = eco_ga_solution.get_package_position(package_id=package.package_id)
+                pkg_orientation = eco_ga_solution.get_package_orientation(package_id=package.package_id)
+                
+                package.loaded = parent_uld
+                package.length, package.width, package.height = pkg_orientation[0], pkg_orientation[1], pkg_orientation[2]
+                package.generate_corners(ref_corner)
+        
+        for package in self.packages.values():
+            if package.loaded:
+                self.ulds[package.loaded].add_package(package)
+                
+        

@@ -96,10 +96,8 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
         ax.set_zlim(z_min, z_max)
         ax.set_title(f"ULD: {uld_id} Visualization\nPriority Packages Packed: {pri_cost_uld}, Economy Packages Packed: {eco_cost_uld}")
 
-        if show:
-            plt.show()
-        else:
-            plt.savefig(f"output/{output_file}_{uld_id}.png")
+        
+        plt.savefig(f"output/{output_file}_{uld_id}.png")
             
         # print(uld_id, "Filled Capacity: ", filled_capacity_uld)
         print(uld_id, "Max Allowed Capacity: ", ulds[uld_id].capacity, "Filled Capacity: ", filled_capacity_uld)
@@ -108,11 +106,115 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
     print(f"Priority Packages: {priority_packages_count}, Economy Packages: {economy_packages_count}")
 
 
+def visualize_packing3d(
+    total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show=True
+):
+    # Group packages by ULD ID
+    priority_packages_count = 0
+    economy_packages_count = 0
+    uld_groups = {}
+    for package_id, uld_id, coords in packages:
+        if uld_id not in uld_groups:
+            uld_groups[uld_id] = []
+        uld_groups[uld_id].append((package_id, coords))
+
+    priority_color = "green"
+    economy_color = "pink"
+
+    # Set up the combined figure
+    num_uld = len(uld_groups)
+    rows, cols = 2, 3  # Fixed grid size (2 rows and 3 columns)
+    fig = plt.figure(figsize=(15, 10))  # Adjust figure size for clarity
+    plot_idx = 1
+
+    for uld_id, uld_packages in uld_groups.items():
+        if uld_id == "NONE":
+            continue
+
+        ax = fig.add_subplot(rows, cols, plot_idx, projection='3d')
+        plot_idx += 1
+
+        x_min, y_min, z_min = 0, 0, 0
+        x_max, y_max, z_max = ulds[uld_id].length, ulds[uld_id].width, ulds[uld_id].height
+
+        eco_cost_uld = 0
+        pri_cost_uld = 0
+        filled_capacity_uld = 0
+
+        for package_id, coords in uld_packages:
+            x0, y0, z0, x1, y1, z1 = coords
+
+            vertices = [
+                [x0, y0, z0],
+                [x1, y0, z0],
+                [x1, y1, z0],
+                [x0, y1, z0],
+                [x0, y0, z1],
+                [x1, y0, z1],
+                [x1, y1, z1],
+                [x0, y1, z1],
+            ]
+
+            faces = [
+                [vertices[i] for i in [0, 1, 2, 3]],  
+                [vertices[i] for i in [4, 5, 6, 7]], 
+                [vertices[i] for i in [0, 1, 5, 4]],
+                [vertices[i] for i in [2, 3, 7, 6]], 
+                [vertices[i] for i in [1, 2, 6, 5]],
+                [vertices[i] for i in [0, 3, 7, 4]],  
+            ]
+
+            filled_capacity_uld += packages1[package_id].weight
+            if packages1[package_id].priority == 1:
+                priority_packages_count += 1
+                pri_cost_uld += 1
+                color = priority_color
+            else:
+                economy_packages_count += 1
+                eco_cost_uld += 1   
+                color = economy_color
+
+            ax.add_collection3d(Poly3DCollection(faces, facecolors=color, linewidths=1, edgecolors='black', alpha=0.5))
+            ax.text((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, package_id, fontsize=6)
+
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
+        ax.set_zlim(z_min, z_max)
+        ax.set_title(f"ULD: {uld_id}\nPriority: {pri_cost_uld}, Economy: {eco_cost_uld}")
+
+        # print(uld_id, "Max Allowed Capacity: ", ulds[uld_id].capacity, "Filled Capacity: ", filled_capacity_uld)
+        # print(uld_id, "Priority Packages:", pri_cost_uld, "Economy Packages:", eco_cost_uld)
+
+        # Stop if the grid is filled
+        if plot_idx > rows * cols:
+            print("Only the first 6 ULDs will be displayed due to grid size.")
+            break
+
+    plt.tight_layout()
+    # if show:
+    #     plt.show()
+    #     plt.savefig(f"output/{output_file}_combined.png")
+    # else:
+    #     plt.savefig(f"output/{output_file}_combined.png")
+    plt.show()
+    # plt.savefig(f"output/{output_file}_combined.png")
+
+    # print(f"Priority Packages: {priority_packages_count}, Economy Packages: {economy_packages_count}")
+
+
+
 def visualize(input_file, output_file, show=False):
     ulds, packages1, k = parse_input(input_file)
     t = (list(ulds.values()))
     total_cost, total_packages, priority_ULDs, packages = parse_output(f"output/{output_file}")
-    visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show)
+    if show:
+        visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show)
+        visualize_packing3d(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show)
+    else:
+        visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs, packages, output_file, show)
     
 if __name__ == "__main__":
     visualize(sys.argv[1], sys.argv[2], 1)
