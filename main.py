@@ -50,6 +50,6 @@ if __name__ == "__main__":
     print(f"Minimum cost: {min_cost} at run {min_cost_arg + 1}")
     min_ocm = all_ocms[min_cost_arg]
     output_file = f"solution.txt"
-    min_ocm.file_output_ocm(f"output/{output_file}")
+    min_ocm.file_output_ocm(f"{output_file}")
         
     visualize("data/Challenge_FedEx.txt", output_file, show = True)
