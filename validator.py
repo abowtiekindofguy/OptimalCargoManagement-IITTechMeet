@@ -1,33 +1,40 @@
-## Solution Validator
 from package import Package
 from uld import ULD
 from cuboid import Cuboid
 
-def validate_uld(uld, packages):
-    uld_cuboid = Cuboid((0,0,0), (uld.length, uld.width, uld.height))
-    package_cuboid_list = []
-    for package in packages:
-        package_cuboid = Cuboid(package.corners[0], package.corners[7])
-        package_cuboid_list.append(package_cuboid)
-    for i in range(len(package_cuboid_list)):
-        if not package_cuboid_list[i].fits_inside(uld_cuboid):
-            print(f"Package {i} does not fit inside ULD {uld_cuboid}")
-            print(package_cuboid_list[i])
-            # return False
-        for j in range(i+1, len(package_cuboid_list)):
-            if package_cuboid_list[i].intersects(package_cuboid_list[j]):
-                print(f"Package {i} intersects with Package {j}")
-                print(package_cuboid_list[i], package_cuboid_list[j])
-                # return False
-            
-    return True
-
 class SolutionValidator:
-    def __init__(self, solution):
+    def __init__(self, solution, verbose=False):
         self.solution_packages = solution.packages
         self.solution_ulds = solution.ulds
         self.valid = False
         self.package_collection = None
+        self.verbose = verbose
+    
+        
+    def log(self, message):
+        if self.verbose:
+            print(message)
+
+
+    def validate_uld(self, uld, packages):
+        uld_cuboid = Cuboid((0,0,0), (uld.length, uld.width, uld.height))
+        package_cuboid_list = []
+        for package in packages:
+            package_cuboid = Cuboid(package.corners[0], package.corners[7])
+            package_cuboid_list.append(package_cuboid)
+        for i in range(len(package_cuboid_list)):
+            if not package_cuboid_list[i].fits_inside(uld_cuboid):
+                self.log(f"Package {i} does not fit inside ULD {uld_cuboid}")
+                self.log(package_cuboid_list[i])
+                return False
+                
+            for j in range(i+1, len(package_cuboid_list)):
+                if package_cuboid_list[i].intersects(package_cuboid_list[j]):
+                    self.log(f"Package {i} intersects with Package {j}")
+                    self.log(f"{package_cuboid_list[i]}\n{package_cuboid_list[j]}")
+                    return False
+                
+        return True
 
     def validate(self):
         package_collection = {uld_id:[] for uld_id in self.solution_ulds}
@@ -35,24 +42,29 @@ class SolutionValidator:
         for package_id, package in self.solution_packages.items():
             if package.loaded:
                 package_collection[package.loaded].append(package)
-                
+        
         for uld_id in package_collection:
             uld = self.solution_ulds[uld_id]
-            validate_uld_bool = validate_uld(uld, package_collection[uld_id])
+            self.log(f"Validating ULD {uld_id}")
+            validate_uld_bool = self.validate_uld(uld, package_collection[uld_id])
             if not validate_uld_bool:
                 self.valid = False
+                self.log(f"ULD {uld_id} is invalid")
                 return
             
+            self.log(f"ULD {uld_id} is valid")
+            
+        self.log("Checking Max Weight Constraints")
         for uld_id in package_collection:
             uld = self.solution_ulds[uld_id]
             uld_max_weight = uld.capacity
             package_weight = sum([package.weight for package in package_collection[uld_id]])
-            # for package in package_collection[uld_id]:
             if package_weight > uld_max_weight:
-                print(f"ULD {uld_id} has weight {package_weight} and capacity {uld_max_weight}")
                 self.valid = False
+                self.log(f"ULD {uld_id} exceeds max weight")
                 return
-                
+            
+        self.log("All Constraints Satisfied!!")
             
         self.valid = True
         return

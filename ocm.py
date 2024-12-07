@@ -112,6 +112,9 @@ class OptimalCargoManagement(object):
         self.package_ordering = priority_ordering + non_priority_ordering
         self.priority_ordering = priority_ordering
         self.non_priority_ordering = non_priority_ordering
+        
+        self.log("Package Ordering Created \n")
+        
         return priority_ordering, non_priority_ordering
         
     def reorient_packages(self):
@@ -122,6 +125,8 @@ class OptimalCargoManagement(object):
             package_to_reorient.reorient(order_z_against)
             
     def adhoc_additions(self, random_shuffle = False):
+        self.log("Performing Ad-Hoc Additions with Random Shuffle: {random_shuffle}")
+        
         for uld in self.ulds.values():
             uld.create_cuboid_environment()
         
@@ -145,6 +150,8 @@ class OptimalCargoManagement(object):
                         adhoc_loaded_packages_count += 1
                         self.log(f"Package {package_id} loaded in ULD {uld.uld_id} via Ad-Hoc Addition")
                         break                
+                    
+        self.log(f"Ad-Hoc Additions Completed: {adhoc_loaded_packages_count} packages loaded")
                 
     def unused_uld_ids(self):
         used_ulds = set()

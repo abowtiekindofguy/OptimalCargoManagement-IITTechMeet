@@ -72,8 +72,7 @@ class Box:
         self.height = int(height)
         self.width = int(width)
         self.weight = int(weight)
-        if self.length <= 0 or self.height <= 0 or self.width <= 0:
-            raise Exception("A number <= 0 for one of the parameters was given for Box.")
+        
     
     def __repr__(self):
         return f"Box(length={self.length}, height={self.height}, width={self.width}, origin={self.origin}, weight={self.weight})"
@@ -96,9 +95,6 @@ class Container:
         self.length = int(length)
         self.height = int(height)
         self.width = int(width)
-        if self.length <= 0 or self.height <= 0 or self.width <= 0:
-            raise Exception("A number <= 0 for one of the parameters was given for Container.")
-        # initial EMS is the whole container
         self.ems = [EMS(self.origin, self.length, self.height, self.width)]
     def __repr__(self):
         return f"Container(length={self.length}, height={self.height}, width={self.width}, origin={self.origin})"
@@ -140,12 +136,18 @@ class Chromosome:
         return self.container_loading_sequence
 
 class GeneticAlgorithm(object):
-    def __init__(self, uld_dimensions, package_dimensions):
+    def __init__(self, uld_dimensions, package_dimensions, verbose=False):
+        self.verbose = verbose
+        
         self.uld_dimensions = [Container(length=c[0], width=c[1], height=c[2]) for c in uld_dimensions]
         self.package_dimensions = [Box(length=b[0], width=b[1], height=b[2]) for b in package_dimensions]
         
         self.uld_dimensions_dict = {uld[3]: (uld[0], uld[1], uld[2]) for uld in uld_dimensions}
         self.package_dimensions_dict = {package[3]: (package[0], package[1], package[2]) for package in package_dimensions}
+        
+    def log(self, message):
+        if self.verbose:
+            print(message)
         
     def fitness_score(self, packing_solution):
         container_volume = 0
@@ -172,7 +174,6 @@ class GeneticAlgorithm(object):
                                 container.origin[1] + container.height, 
                                 container.origin[2] + container.width])
 
-        # Define EMS regions
         ems_candidates = [
             EMS(origin=container.origin, 
                 length=box.origin[0] - container.origin[0], 
@@ -245,9 +246,9 @@ class GeneticAlgorithm(object):
 
     def placement_selection(self, box, ems):
         rotations = [
-            (box.length, box.height, box.width),          # Original orientation
-            (box.height, box.length, box.width),         # Rotation 1: Swap length & height
-            (box.width, box.height, box.length)          # Rotation 2: Swap length & width
+            (box.length, box.height, box.width),
+            (box.height, box.length, box.width),         
+            (box.width, box.height, box.length)        
         ]
 
         possible_rotations, possible_margins = [], []
@@ -258,18 +259,12 @@ class GeneticAlgorithm(object):
                 possible_rotations.append(Box(l, h, w, origin=box.origin, weight=box.weight))
                 possible_margins.append(margins)
 
-        if not possible_rotations:
-            raise Exception('The box does not fit into the EMS')
-
         best_ind = np.argmin([min(m) for m in possible_margins])
         return possible_rotations[best_ind]
     
     
     def pack_boxes(self, boxes, containers, box_packing_sequence, container_loading_sequence):
         n_containers, n_boxes = len(containers), len(boxes)
-        
-        if n_containers == 0 or n_boxes == 0:
-            raise Exception('Specify at least one container and one box')
 
         packing_solution = []
         for c in containers:
@@ -278,7 +273,7 @@ class GeneticAlgorithm(object):
         placed_boxes = [False]*n_boxes
 
         for con_i in range(n_containers):
-            container_ind = container_loading_sequence[con_i] -1  # -1 for 0-based index
+            container_ind = container_loading_sequence[con_i] -1 
             for box_i in range(n_boxes):
                 box_ind = box_packing_sequence[box_i] -1
                 if placed_boxes[box_ind]:
@@ -429,21 +424,14 @@ class GeneticAlgorithm(object):
 
 
     def perform_box_packing(self, n_iter, population_size, elitism_size, crossover_prob, mutation_prob):
-        if elitism_size < 0 or n_iter <= 0 or population_size <= 0:
-            raise ValueError("Invalid parameters: Ensure non-negative elitism_size and positive iterations/population size.")
-        if not 0 <= crossover_prob <= 1 or not 0 <= mutation_prob <= 1:
-            raise ValueError("Probabilities must be in the range [0, 1].")
-        
         containers = self.uld_dimensions
         boxes = self.package_dimensions
-        
-        if not containers or not boxes:
-            raise ValueError("Specify at least one container and one box.")
 
         population = self.initialize_population(population_size, len(containers), boxes)
         elitism_chromosomes, elitism_fitness = [], []
 
         for _ in range(n_iter):
+            self.log(f"Iteration {_} of {n_iter} in Genetic Algorithm")
             box_packings = [self.pack_boxes(boxes, containers, chrom.bps(), chrom.cls()) for chrom in population]
             fitness_scores = [self.fitness_score(box_packing) for box_packing in box_packings]
             population += elitism_chromosomes
@@ -470,7 +458,8 @@ class GeneticAlgorithm(object):
 
     def run_genetic_algorithm(self, n_iter=1, population_size=2, elitism_size=5, crossover_prob=0.5, mutation_prob=0.5):
         packing_solution = self.perform_box_packing(n_iter, population_size, elitism_size, crossover_prob, mutation_prob)
-
+        self.log("Genetic Algorithm completed")
+        self.log("Processing Best Found Solution into a ULD-Package Matching")
         package_matcher = PackageMatcher(packing_solution=packing_solution, uld_ids=self.uld_dimensions_dict, package_ids=self.package_dimensions_dict)
         
         return package_matcher

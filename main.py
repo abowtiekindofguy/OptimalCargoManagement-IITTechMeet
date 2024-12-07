@@ -10,7 +10,7 @@ import sys
 if __name__ == "__main__":
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-    verbose = sys.argv[3]
+    verbose = True if sys.argv[3] == "1" else False
     
     costs = []
     matplotlib.pyplot.close("all")
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     def run_simulation(run_number):
         ulds, packages, K = parse_input(input_file)
 
-        ocm = OptimalCargoManagement(ulds, packages, K)
+        ocm = OptimalCargoManagement(ulds, packages, K, verbose)
         
         ocm.create_package_ordering()
         
@@ -38,23 +38,20 @@ if __name__ == "__main__":
         return ocm
     
     all_ocms = []
-    
-    for run_number in range(1):
-        print("Running simulation", run_number + 1)
-        ocm = run_simulation(run_number)
-        sv = SolutionValidator(ocm)
-        sv.validate()
-        if sv.is_valid():
-            all_ocms.append(ocm)
-        else:
-            print(f"Invalid solution for run {run_number + 1}")
+    ocm = run_simulation(0)
+    sv = SolutionValidator(ocm, verbose)
+    sv.validate()
+    if sv.is_valid():
+        all_ocms.append(ocm)
+    else:
+        print(f"Invalid solution for run {0 + 1}")
 
     costs = [ocm.cost() for ocm in all_ocms]
     
     min_cost_arg, min_cost = np.argmin(costs), min(costs)
-    print(f"Minimum cost: {min_cost} at run {min_cost_arg + 1}")
+    if verbose:
+        print(f"Minimum cost: {min_cost}")
     min_ocm = all_ocms[min_cost_arg]
-    output_file = f"solution.txt"
     min_ocm.file_output_ocm(f"{output_file}")
         
     visualize(input_file=input_file, output_file=output_file, show = True)

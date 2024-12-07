@@ -85,10 +85,8 @@ class ULD:
         
     def create_cuboid_environment(self):
         self.existing_cuboids = []
-        for package_id, box_package in self.packages.items():
+        for box_package in self.packages.values():
             package_cuboid = Cuboid(box_package.corners[0], box_package.corners[7])
-            # package_corners = package_cuboid.cuboid_corners()
-            # self.existing_cuboid_corners.extend(package_corners)
             self.existing_cuboids.append(package_cuboid)
             
     def fit_in_package(self, package):
@@ -103,7 +101,6 @@ class ULD:
                 self.packages[package.package_id]=package
                 package.loaded = self.uld_id
                 new_package_cuboid = Cuboid(package.corners[0], package.corners[7])
-                # self.existing_cuboid_corners.extend(new_package_cuboid.cuboid_corners())
                 self.existing_cuboids.append(new_package_cuboid)
                 return package.loaded
         return False
