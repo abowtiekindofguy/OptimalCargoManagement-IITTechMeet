@@ -106,7 +106,7 @@ if __name__ == "__main__":
             if package.loaded:
                 ocm.ulds[package.loaded].add_package(package)
         
-        ocm.extra_additions()
+        ocm.adhoc_additions()
         
         print(random_run + 1, ocm.cost())
         
@@ -130,6 +130,6 @@ if __name__ == "__main__":
     print(f"Minimum cost: {min_cost} at run {min_cost_arg + 1}")
     min_ocm = all_ocms[min_cost_arg]
     output_file = f"solution_best.txt"
-    min_ocm.print_solution(f"output/{output_file}")
+    min_ocm.file_output_ocm(f"output/{output_file}")
         
     visualize("data/Challenge_FedEx.txt", output_file, show = True)

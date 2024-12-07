@@ -6,9 +6,8 @@ class OptimalCargoManagement(object):
         self.ulds = ulds
         self.packages = packages
         self.K = K
-        self.package_ordering = []
+        self.package_ordering = None
         self.verbose = verbose
-        # self.create_package_ordering()
         
     def log(self, message):
         if self.verbose: print(message)
@@ -22,22 +21,31 @@ class OptimalCargoManagement(object):
     def cost(self, only_priority = False):
         total_cost = 0
         priority_activated_ulds = set()
-        for package_id, package in self.packages.items():
+        for package in self.packages.values():
             if package.loaded is not None and package.priority:
                 priority_activated_ulds.add(package.loaded)
-        priority_cost = len(priority_activated_ulds) * self.K
+        priority_cost = len(priority_activated_ulds)
+        
         economy_cost = 0
-        for package_id, package in self.packages.items():
+        for package in self.packages.values():
             if not package.priority and package.loaded is None:
                 economy_cost += package.delay
-        total_cost = priority_cost + economy_cost
-        self.log(f"Priority cost: {priority_cost}, Economy cost: {economy_cost}, Total cost: {total_cost}")
+        total_cost = priority_cost * self.K + economy_cost
+        
+        # self.log(f"Priority cost: {priority_cost}, Economy cost: {economy_cost}, Total cost: {total_cost}")
+        
         if only_priority: return priority_cost
         else: return total_cost
+        
+    def num_packages_loaded(self):
+        num_packages_loaded = 0
+        for package in self.packages.values():
+            if package.loaded is not None:
+                num_packages_loaded += 1
+                
+        return num_packages_loaded
     
-    def fit(self, optional_ordering = None, selected_ulds = None):
-        # print(self.package_ordering)
-        # print(len(self.package_ordering))
+    def fit_greedy(self, optional_ordering = None, selected_ulds = None):
         self.log(f"Fitting packages: {len(self.packages)} packages in {len(self.ulds)} ULDs")
         self.log(f"Optional ordering: {True if optional_ordering is not None else False}")   
         if optional_ordering is not None:
@@ -45,46 +53,48 @@ class OptimalCargoManagement(object):
                 package_id = order[0]
                 if selected_ulds is not None:
                     for uld_id in selected_ulds:
-                        r = self.ulds[uld_id].update_filled_coordinates(self.packages[package_id])
+                        r = self.ulds[uld_id].uld_fill_greedy(self.packages[package_id])
                         if r: break
                 else:
-                    # for uld_id, uld in self.ulds.items():
-                    #     r = uld.fit_in_package(self.packages[package_id])
-                    #     if r: break
                     for uld_id, uld in self.ulds.items():
-                        r = uld.update_filled_coordinates(self.packages[package_id])
+                        r = uld.uld_fill_greedy(self.packages[package_id])
                         if r: break
         else:
             for order in self.package_ordering:
                 package_id = order[0]
                 for uld_id, uld in self.ulds.items():
-                    r = uld.update_filled_coordinates(self.packages[package_id])
+                    r = uld.uld_fill_greedy(self.packages[package_id])
                     if r: break
         
                     
     def __repr__(self):
         uld_string = "Loaded ULDs:\n"
-        for uld_id, uld in self.ulds.items():
+        for uld in self.ulds.values():
             if uld.filled_coordinates:
                 uld_string += f"{uld}\n"
+                
         package_string = "Loaded Packages:\n"
-        for package_id, package in self.packages.items():
+        for package in self.packages.values():
             if package.loaded is not None:
                 package_string += f"{package}\n"
+                
         package_string += "Unloaded Packages:\n"
-        for package_id, package in self.packages.items():
+        for package in self.packages.values():
             if package.loaded is None:
                 package_string += f"{package}\n"
-        # return f"OptimalCargoManagement({self.ulds}, {self.packages}, {self.K}) + {package_string}"
-        # return package_string
+        
         ocm_attributes = f"OptimalCargoManagement Attributes = {len(self.ulds)} ULDs, {len(self.packages)} Packages, K = {self.K}"   
         return uld_string + package_string + ocm_attributes
     
-    def print_solution(self, filename):
+    def file_output_ocm(self, filename):
         with open(filename, 'w') as file:
-            file.write("9,9,9\n")
+            total_cost = self.cost()
+            priority_cost = self.cost(only_priority = True)
+            num_packages_loaded = self.num_packages_loaded()
             
-            for package_id, package in self.packages.items():
+            file.write(f"{total_cost},{num_packages_loaded},{priority_cost}\n")
+            
+            for package in self.packages.values():
                 if package.loaded is not None:
                     file.write(f"{package.package_id},{package.loaded},{package.corners[0][0]},{package.corners[0][1]},{package.corners[0][2]},{package.corners[7][0]},{package.corners[7][1]},{package.corners[7][2]}\n")
                 else:
@@ -109,47 +119,32 @@ class OptimalCargoManagement(object):
             package_to_reorient = self.packages[package_id]
             package_to_reorient.reorient(order_z_against)
             
-    def extra_additions(self):
-        for uld_id, uld in self.ulds.items():
-            # print(f"ULD {uld_id} creating cuboid environment")
+    def adhoc_additions(self):
+        for uld in self.ulds.values():
             uld.create_cuboid_environment()
-        extra_count = 0
+        
         unloaded_pkd_ids = []
-        for package_id, package in self.packages.items():
-            if package.loaded is None:
-                unloaded_pkd_ids.append(package_id)
-        # random.shuffle(unloaded_pkd_ids)
+        for package in self.packages.values():
+            if package.loaded is None: unloaded_pkd_ids.append(package.package_id)
+
         sorted_unloaded_pkd_ids = sorted(unloaded_pkd_ids, key = lambda x: self.packages[x].delay/(max([self.packages[x].height,self.packages[x].width,self.packages[x].length])), reverse = True)
-        # for package_id, package in self.packages.items():
-            # print(package_id)
-        num_unloaded = len(sorted_unloaded_pkd_ids)
+                
+        adhoc_loaded_packages_count = 0
+        
         for package_id in sorted_unloaded_pkd_ids:
             package = self.packages[package_id]
-            # if extra_count > 450:
-            #     break
             if package.loaded is None:
-                # print(f"Package {package_id} not loaded")
-                for uld_id, uld in self.ulds.items():
-                    # print("Trying to load in ULD", uld_id)
+                for uld in self.ulds.values():
                     r = uld.fit_in_package(package)
-                    # print(r)
-                    # print(self.cost())
                     if r:
-                        extra_count += 1
-                        # print(f"Package {package_id} loaded in ULD {r}, remaining = {num_unloaded - extra_count}")
-                        break
-                # print(package)   
-                
+                        adhoc_loaded_packages_count += 1
+                        self.log(f"Package {package_id} loaded in ULD {uld.uld_id} via Ad-Hoc Addition")
+                        break                
                 
     def unused_uld_ids(self):
-        package_uld_count = {}
-        for package_id, package in self.packages.items():
-            if package.loaded in package_uld_count:
-                package_uld_count[package.loaded] += 1
-            else:
-                package_uld_count[package.loaded] = 1
-        unused_uld_ids = []
-        for uld_id, uld in self.ulds.items():
-            if uld_id not in package_uld_count:
-                unused_uld_ids.append(uld_id)
+        used_ulds = set()
+        for package in self.packages.values():
+            used_ulds.add(package.loaded) 
+        unused_uld_ids = set(self.ulds.keys()) - used_ulds
+        
         return unused_uld_ids

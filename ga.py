@@ -10,11 +10,6 @@ from cuboid import Cuboid
 from package import Package
 from validator import *
 
-### Classes ###
-
-# random.seed(123)
-# np.random.seed(123)
-
 class EMS:
     def __init__(self, origin, length, height, width):
         self.origin = np.array(origin, dtype=int)
@@ -668,13 +663,7 @@ class PackageMatcher:
 
             
 
-def PerformBoxPacking(containers,
-                    boxes,
-                    n_iter,
-                    population_size,
-                    elitism_size,
-                    crossover_prob,
-                    mutation_prob,
+def PerformBoxPacking(containers, boxes, n_iter, population_size, elitism_size, crossover_prob, mutation_prob,
                     verbose=False,
                     plotSolution=False):
 

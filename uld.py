@@ -36,7 +36,7 @@ class ULD:
     def __repr__(self):
         return f"ULD({self.uld_id}, {self.length}, {self.width}, {self.height}, {self.capacity})"
 
-    def update_filled_coordinates(self, package):
+    def uld_fill_greedy(self, package):
         if self.x_filled + package.length <= self.length and self.last_plane_y + package.width <= self.width and self.last_filled_row_z + package.height <= self.height:
             self.packages[package.package_id]=package
             package.loaded = self.uld_id
