@@ -5,8 +5,13 @@ from io_utils import parse_input
 from ocm import OptimalCargoManagement
 from validator import SolutionValidator 
 import numpy as np
+import sys
 
 if __name__ == "__main__":
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+    verbose = sys.argv[3]
+    
     costs = []
     matplotlib.pyplot.close("all")
     
@@ -18,7 +23,7 @@ if __name__ == "__main__":
     runs_ocm_cost = {}
     
     def run_simulation(run_number):
-        ulds, packages, K = parse_input("data/Challenge_FedEx.txt")
+        ulds, packages, K = parse_input(input_file)
 
         ocm = OptimalCargoManagement(ulds, packages, K)
         
@@ -52,4 +57,4 @@ if __name__ == "__main__":
     output_file = f"solution.txt"
     min_ocm.file_output_ocm(f"{output_file}")
         
-    visualize("data/Challenge_FedEx.txt", output_file, show = True)
+    visualize(input_file=input_file, output_file=output_file, show = True)
