@@ -30,9 +30,9 @@ class Package:
         
     def __repr__(self):
         if self.loaded is not None:
-            return f"Package(Pkg ID: {self.package_id}, {self.priority}, Loaded: {self.loaded}, Reference Corner: {self.corners[0]}, Delay: {self.delay})"
+            return f"Package(Pkg ID: {self.package_id}, Priority: {self.priority}, Loaded: {self.loaded}, Reference Corner: {self.corners[0]}, Delay: {self.delay})"
         else:
-            return f"Package(Pkg ID: {self.package_id}, {self.priority}, Loaded: {self.loaded}, Reference Corner: {self.corners}, Delay: {self.delay})"    
+            return f"Package(Pkg ID: {self.package_id}, Priority: {self.priority}, Loaded: {self.loaded}, Reference Corner: {self.corners}, Delay: {self.delay})"    
 
     def generate_corners(self, reference_corner):
         x, y, z = reference_corner
@@ -68,7 +68,7 @@ def single_dimension_match_by_index(package_1_dimensions, package_2_dimensions, 
 def crainic_sorting(packages_list, group_on_dimensions = False, reverse = False):
     packages_dimensions_dict = {}
     for package in packages_list:
-        packages_dimensions_dict[package_id] = [package.length, package.width, package.height]
+        packages_dimensions_dict[package.package_id] = [package.length, package.width, package.height]
         
     matches_by_dimension = {}
     matched_packages = set()
@@ -77,8 +77,8 @@ def crainic_sorting(packages_list, group_on_dimensions = False, reverse = False)
             dim_matches_map = {1: [], 2: [], 3: []}
             for i in dim_matches_map.keys():
                 for other_package_id, other_package_dimensions in packages_dimensions_dict.items():
-                    if package_id != other_package_id and single_dimension_match_by_index(package_dimensions, other_package_dimensions, i) and other_package_id not in matched_packages:
-                        dim_matches_map[i].append((other_package_id, single_dimension_match_by_index(package_dimensions, other_package_dimensions, i)))   
+                    if package_id != other_package_id and single_dimension_match_by_index(package_dimensions, other_package_dimensions, i-1) and other_package_id not in matched_packages:
+                        dim_matches_map[i].append((other_package_id, single_dimension_match_by_index(package_dimensions, other_package_dimensions, i-1)))   
                         
             max_match_index = max(dim_matches_map, key=lambda x: len(dim_matches_map[x]))
             matches_by_dimension[package_id] = (dim_matches_map[max_match_index], max_match_index)
@@ -115,14 +115,9 @@ def crainic_sorting(packages_list, group_on_dimensions = False, reverse = False)
         dimension_group_order[dimension_to_group] = new_group
         
     if group_on_dimensions:
-        sorted_groups = sorted(dimension_group_order.keys(), reverse)
+        sorted_groups = sorted(dimension_group_order.keys(), reverse = reverse)
         for group_key in sorted_groups: order += dimension_group_order[group_key]
     else:   
         random.shuffle(groups)  
         for group in groups: order += group
     return order
-    
-    
-
-            
-    

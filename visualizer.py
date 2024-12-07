@@ -6,9 +6,6 @@ from package import Package
 from uld import ULD
 from io_utils import parse_input, parse_output
 
-
-
-
 def print_summary(ulds, packages):
     print("ULDs:")
     for uld in ulds.values():
@@ -71,14 +68,17 @@ def visualize_packing(total_cost, packages1, ulds, total_packages, priority_ULDs
                 [vertices[i] for i in [1, 2, 6, 5]],
                 [vertices[i] for i in [0, 3, 7, 4]],  
             ]
-            color = packages1[package_id].priority == "Priority" and priority_color or economy_color
+            # color = packages1[package_id].priority == "Priority" and priority_color or economy_color
+    
             filled_capacity_uld += packages1[package_id].weight
-            if packages1[package_id].priority == "Priority":
+            if packages1[package_id].priority == 1:
                 priority_packages_count += 1
                 pri_cost_uld += 1
+                color = priority_color
             else:
                 economy_packages_count += 1
                 eco_cost_uld += 1   
+                color = economy_color
             # for face in faces:
             #     ax.plot([v[0] for v in face] + [face[0][0]], 
             #             [v[1] for v in face] + [face[0][1]], 

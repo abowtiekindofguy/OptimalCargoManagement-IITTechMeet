@@ -12,11 +12,13 @@ def validate_uld(uld, packages):
     for i in range(len(package_cuboid_list)):
         if not package_cuboid_list[i].fits_inside(uld_cuboid):
             print(f"Package {i} does not fit inside ULD {uld_cuboid}")
-            return False
+            print(package_cuboid_list[i])
+            # return False
         for j in range(i+1, len(package_cuboid_list)):
             if package_cuboid_list[i].intersects(package_cuboid_list[j]):
                 print(f"Package {i} intersects with Package {j}")
-                return False
+                print(package_cuboid_list[i], package_cuboid_list[j])
+                # return False
             
     return True
 

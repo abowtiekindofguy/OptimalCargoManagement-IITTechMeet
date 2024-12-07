@@ -17,10 +17,10 @@ np.random.seed(123)
 
 class EMS:
     def __init__(self, origin, length, height, width):
-        self.origin = np.array(origin, dtype=float)
-        self.length = float(length)
-        self.height = float(height)
-        self.width = float(width)
+        self.origin = np.array(origin, dtype=int)
+        self.length = int(length)
+        self.height = int(height)
+        self.width = int(width)
     def __repr__(self):
         return f"EMS(origin={self.origin}, length={self.length}, height={self.height}, width={self.width})"
 
@@ -28,11 +28,11 @@ class Box:
     def __init__(self, length, height, width, origin=None, weight=0):
         if origin is None:
             origin = [0, 0, 0]
-        self.origin = np.array(origin, dtype=float)
-        self.length = float(length)
-        self.height = float(height)
-        self.width = float(width)
-        self.weight = float(weight)
+        self.origin = np.array(origin, dtype=int)
+        self.length = int(length)
+        self.height = int(height)
+        self.width = int(width)
+        self.weight = int(weight)
         if self.length <= 0 or self.height <= 0 or self.width <= 0:
             raise Exception("A number <= 0 for one of the parameters was given for Box.")
     def __repr__(self):
@@ -42,10 +42,10 @@ class Container:
     def __init__(self, length, height, width, origin=None):
         if origin is None:
             origin = [0,0,0]
-        self.origin = np.array(origin, dtype=float)
-        self.length = float(length)
-        self.height = float(height)
-        self.width = float(width)
+        self.origin = np.array(origin, dtype=int)
+        self.length = int(length)
+        self.height = int(height)
+        self.width = int(width)
         if self.length <= 0 or self.height <= 0 or self.width <= 0:
             raise Exception("A number <= 0 for one of the parameters was given for Container.")
         # initial EMS is the whole container
@@ -53,6 +53,7 @@ class Container:
     def __repr__(self):
         return f"Container(length={self.length}, height={self.height}, width={self.width}, origin={self.origin})"
 
+# class Algorithm:
 def CheckIfBoxIsOutside(container, box):
     container_vertex1 = container.origin
     container_vertex2 = container.origin + np.array([container.length, container.height, container.width])
@@ -63,14 +64,13 @@ def CheckIfBoxIsOutside(container, box):
     box_vertex4 = box.origin + np.array([box.length, 0, 0])
     
     is_outside = ((container_vertex1[1] >= box_vertex2[1]) or
-                  (container_vertex2[1] <= box_vertex1[1]) or
-                  (container_vertex2[0] <= box_vertex1[0]) or
-                  (container_vertex1[0] >= box_vertex4[0]) or
-                  (container_vertex1[2] >= box_vertex3[2]) or
-                  (container_vertex2[2] <= box_vertex1[2]))
+                (container_vertex2[1] <= box_vertex1[1]) or
+                (container_vertex2[0] <= box_vertex1[0]) or
+                (container_vertex1[0] >= box_vertex4[0]) or
+                (container_vertex1[2] >= box_vertex3[2]) or
+                (container_vertex2[2] <= box_vertex1[2]))
 
     return is_outside
-    
 
 def CheckIfEMSvalid(EMS_object):
     if EMS_object.length <= 0 or EMS_object.height <= 0 or EMS_object.width <= 0:
@@ -78,9 +78,9 @@ def CheckIfEMSvalid(EMS_object):
     else:
         return True
 
-def CreateEMS(given_container, given_box):
-    container = deepcopy(given_container)
-    box = deepcopy(given_box)
+def CreateEMS(container, box):
+    # container = deepcopy(given_container)
+    # box = deepcopy(given_box)
     if len(box.origin) == 0:
         raise Exception('Specify origin for the box')
 
@@ -91,52 +91,52 @@ def CreateEMS(given_container, given_box):
 
     # EMS 1:
     EMS1 = EMS(origin=container.origin,
-               length=(box.origin[0] - container.origin[0]),
-               height=container.height,
-               width=container.width)
+            length=(box.origin[0] - container.origin[0]),
+            height=container.height,
+            width=container.width)
     if CheckIfEMSvalid(EMS1):
         ems_list.append(EMS1)
 
     # EMS 2:
     EMS2 = EMS(origin=container.origin,
-               length=container.length,
-               height=container.height,
-               width=(box.origin[2] - container.origin[2]))
+            length=container.length,
+            height=container.height,
+            width=(box.origin[2] - container.origin[2]))
     if CheckIfEMSvalid(EMS2):
         ems_list.append(EMS2)
 
     # EMS 3:
     EMS3_origin = np.array([box.origin[0], container.origin[1], container.origin[2]]) + np.array([box.length, 0, 0])
     EMS3 = EMS(origin=EMS3_origin,
-               length=((container.origin + np.array([container.length, 0, 0])) - EMS3_origin)[0],
-               height=container.height,
-               width=container.width)
+            length=((container.origin + np.array([container.length, 0, 0])) - EMS3_origin)[0],
+            height=container.height,
+            width=container.width)
     if CheckIfEMSvalid(EMS3):
         ems_list.append(EMS3)
 
     # EMS 4:
     EMS4_origin = np.array([container.origin[0], container.origin[1], box.origin[2]]) + np.array([0, 0, box.width])
     EMS4 = EMS(origin=EMS4_origin,
-               length=container.length,
-               height=container.height,
-               width=((container.origin + np.array([0,0,container.width])) - EMS4_origin)[2])
+            length=container.length,
+            height=container.height,
+            width=((container.origin + np.array([0,0,container.width])) - EMS4_origin)[2])
     if CheckIfEMSvalid(EMS4):
         ems_list.append(EMS4)
 
     # EMS 5:
     EMS5_origin = np.array([container.origin[0], box.origin[1], container.origin[2]]) + np.array([0, box.height, 0])
     EMS5 = EMS(origin=EMS5_origin,
-               length=container.length,
-               height=((container.origin + np.array([0,container.height,0])) - EMS5_origin)[1],
-               width=container.width)
+            length=container.length,
+            height=((container.origin + np.array([0,container.height,0])) - EMS5_origin)[1],
+            width=container.width)
     if CheckIfEMSvalid(EMS5):
         ems_list.append(EMS5)
 
     # EMS 6:
     EMS6 = EMS(origin=container.origin,
-               length=container.length,
-               height=(box.origin[1] - container.origin[1]),
-               width=container.width)
+            length=container.length,
+            height=(box.origin[1] - container.origin[1]),
+            width=container.width)
     if CheckIfEMSvalid(EMS6):
         ems_list.append(EMS6)
 
@@ -202,8 +202,8 @@ def UpdateEMS(given_ems_list,given_box):
 def CalculateDistanceToBoxOrigin(ems):
     return math.sqrt(np.sum(ems.origin**2))
 
-def PrioritizeEMS(given_ems_list):
-    ems_list = deepcopy(given_ems_list)
+def PrioritizeEMS(ems_list):
+    # ems_list = deepcopy(given_ems_list)
     distances = [CalculateDistanceToBoxOrigin(e) for e in ems_list]
     ems_order = np.argsort(distances)
     new_ems_list = [ems_list[i] for i in ems_order]
@@ -370,8 +370,8 @@ def PerformSelection(population, fitness):
         new_population.append(population_copy[better])
     return new_population
 
-def MutateChromosome(given_chromosome):
-    chromosome = deepcopy(given_chromosome)
+def MutateChromosome(chromosome):
+    # chromosome = deepcopy(given_chromosome)
     BPS = chromosome["BPS"][:]
     CLS = chromosome["CLS"][:]
     n_boxes = len(BPS)
@@ -530,6 +530,9 @@ def plot_3d_objects(objects):
         # Add the cuboid to the plot
         if idx!=0:
             ax.add_collection3d(Poly3DCollection(faces, alpha=0.5, edgecolor='k'))
+            
+        if idx==0:
+            ax.add_collection3d(Poly3DCollection(faces, alpha=0.1, edgecolor='k', facecolors='red'))
     
     # Set labels and aspect
     ax.set_xlabel("X-axis")
@@ -540,7 +543,7 @@ def plot_3d_objects(objects):
     plt.show()
     
 def PlotPackingSolution(packing_solution):
-    print("Packing solution: ", len(packing_solution))
+    # print("Packing solution: ", len(packing_solution))
     for container in packing_solution:
         if len(container) > 1:  # Ignore empty containers
             plot_3d_objects(container)
@@ -548,39 +551,124 @@ def PlotPackingSolution(packing_solution):
             print("Empty container")
             
 def process_packing(packing_solution):
-    
     ulds = {}
     packages = {}
+    loading_sequence = []
     for idx, container in enumerate(packing_solution):
         if len(container) > 1:
             # ulds[f"ULD{idx+1}"] = container[0]
             # for i, package in enumerate(container[1:]):
             #     packages[f"Package{idx+1}_{i+1}"] = package
-            x, y, z = container[0].origin.tolist()
+            x, z, y = container[0].origin.tolist()
             l = container[0].length
             w = container[0].width
             h = container[0].height
-            ulds[f"ULD{idx+1}"] = ULD(length=l, width=w, height=h, uld_id=f"ULD{idx+1}", capacity=3000)
+            ulds[f"ULD{idx+1}"] = ULD(length=l, height=h, width=w, uld_id=f"ULD{idx+1}", capacity=3000)
             for i, package in enumerate(container[1:]):
-                x, y, z = package.origin.tolist()
+                x, z, y = package.origin.tolist()
                 l = package.length
-                h = package.width
-                w = package.height
-                packages[f"Package{idx+1}_{i+1}"] = Package(length=l, width=w, height=h, package_id=f"Package{idx+1}_{i+1}", priority="Priority", weight=1, delay=0)
+                w = package.width
+                h = package.height
+                packages[f"Package{idx+1}_{i+1}"] = Package(length=l, height=h, width=w, package_id=f"Package{idx+1}_{i+1}", priority="Priority", weight=1, delay=0)
                 packages[f"Package{idx+1}_{i+1}"].generate_corners((x, y, z))
                 packages[f"Package{idx+1}_{i+1}"].loaded = "ULD" + str(idx+1)
     return ulds, packages
+
+class PackageMatcher:
+    def __init__(self, packing_solution, uld_ids, package_ids):
+        self.packing_solution = packing_solution
+        uld_dimensions = []
+        package_association = {}
+        reverse_uld_ids, reverse_package_ids = {}, {}
+        # reverse_uld_ids = {v: k for k, v in uld_ids.items()}
+        # reverse_package_ids = {v: k for k, v in package_ids.items()}
+        for k, v in uld_ids.items():
+            if v not in reverse_uld_ids:
+                reverse_uld_ids[v] = [k]
+            else:
+                reverse_uld_ids[v].append(k)
+        for k, v in package_ids.items():
+            # all permutations of length, width, height
+            all_perm = [(v[0], v[1], v[2]), (v[0], v[2], v[1]), (v[1], v[0], v[2]), (v[1], v[2], v[0]), (v[2], v[0], v[1]), (v[2], v[1], v[0])]
+            for perm in all_perm:
+                if perm not in reverse_package_ids:
+                    reverse_package_ids[perm] = [(k, perm)]
+                else:
+                    reverse_package_ids[perm].append((k, perm))
+                
+        marked_ulds = set()
+        marked_packages = set()
+        # print("Packing solution: ", (packing_solution))
+        for idx, container in enumerate(packing_solution):
+            if len(container) > 1:
+                possible_uld_ids = reverse_uld_ids[(container[0].length, container[0].width, container[0].height)]
+                uld_id = None
+                for possible_uld_id in possible_uld_ids:
+                    if possible_uld_id not in marked_ulds:
+                        uld_id = possible_uld_id
+                        marked_ulds.add(possible_uld_id)
+                        break
+                if uld_id is None:
+                    raise Exception(f"No ULD found for container, container dimensions: {container[0].length, container[0].width, container[0].height}")
+                
+                for i, package in enumerate(container[1:]):
+                    possible_package_ids = []
+                    if (package.length, package.width, package.height) in reverse_package_ids:
+                        possible_package_ids.extend(reverse_package_ids[(package.length, package.width, package.height)])
+                    if (package.width, package.length, package.height) in reverse_package_ids:
+                        possible_package_ids.extend(reverse_package_ids[(package.width, package.length, package.height)])
+                    if (package.height, package.length, package.width) in reverse_package_ids:
+                        possible_package_ids.extend(reverse_package_ids[(package.height, package.length, package.width)])
+                    if (package.height, package.width, package.length) in reverse_package_ids:
+                        possible_package_ids.extend(reverse_package_ids[(package.height, package.width, package.length)])
+                    if (package.width, package.height, package.length) in reverse_package_ids:
+                        possible_package_ids.extend(reverse_package_ids[(package.width, package.height, package.length)])
+                    if (package.length, package.height, package.width) in reverse_package_ids:
+                        possible_package_ids.extend(reverse_package_ids[(package.length, package.height, package.width)])
+                
+                    package_id = None
+                    package_orientation = None
+                    for possible_package_id in possible_package_ids:
+                        if possible_package_id[0] not in marked_packages:
+                            package_id = possible_package_id[0]
+                            package_orientation = possible_package_id[1]    
+                            marked_packages.add(possible_package_id)
+                            break
+                    if package_id is None:
+                        raise Exception(f"No package found for container, container dimensions: {package.length, package.width, package.height}")
+                    # orientation_matched_against = None
+                    
+                    
+                    package_association[package_id] = uld_id, (package.origin.tolist()[0], package.origin.tolist()[2], package.origin.tolist()[1]), (package_orientation[0], package_orientation[1], package_orientation[2])
+                    
+        self.package_association = package_association
+        
+        # print(self.package_association)
+        
+    def get_parent_uld(self, package_id):
+        return self.package_association[package_id][0]
+    
+    def get_package_position(self, package_id):
+        return self.package_association[package_id][1]
+    
+    def get_package_orientation(self, package_id):
+        return self.package_association[package_id][2]
+    
+    def is_placed(self, package_id):
+        return package_id in self.package_association
+                    
+
             
 
 def PerformBoxPacking(containers,
-                      boxes,
-                      n_iter,
-                      population_size,
-                      elitism_size,
-                      crossover_prob,
-                      mutation_prob,
-                      verbose=False,
-                      plotSolution=False):
+                    boxes,
+                    n_iter,
+                    population_size,
+                    elitism_size,
+                    crossover_prob,
+                    mutation_prob,
+                    verbose=False,
+                    plotSolution=False):
 
     if elitism_size < 0:
         raise Exception('Elitism size cant be negative')
@@ -652,35 +740,10 @@ def PerformBoxPacking(containers,
     best_chromosome = population[best_chromosome_index]
     best_packing_solution = PackBoxes(boxes, containers, best_chromosome["BPS"], best_chromosome["CLS"])
 
-    # if plotSolution:
     # PlotPackingSolution(best_packing_solution)
-    # # print(best_packing_solution)
-    # print(chromosome_fitness)
-    # return best_packing_solution
     
-    return process_packing(best_packing_solution)
+    return (best_packing_solution)
 
-# containers_data = np.loadtxt("uld.txt", skiprows=1) # adapt as needed
-# containers = [Container(length=c[0], width=c[1], height=c[2]) for c in containers_data]
-
-# boxes_data = np.loadtxt("economic.txt", skiprows=1) # adapt as needed
-# # print(boxes_data)
-# # for b in boxes_data:
-# #     print(b)
-# #     print(b[0], b[1], b[2])
-# boxes = [Box(length=b[0], width=b[1], height=b[2]) for b in boxes_data]
-
-# print(len(containers), len(boxes))
-
-# solution = PerformBoxPacking(containers=containers,
-#                              boxes=boxes,
-#                              n_iter=2,
-#                              population_size=10,
-#                              elitism_size=5,
-#                              crossover_prob=0.5,
-#                              mutation_prob=0.5,
-#                              verbose=True,
-#                              plotSolution=True)
 
 class ocm:
     def __init__(self, ulds, packages):
@@ -688,37 +751,61 @@ class ocm:
         self.packages = packages
 
 
-def get_packing_genetic_algorithm(container_dimensions, package_dimensions):
+def get_packing_genetic_algorithm(container_dimensions, package_dimensions, n_iters=5, population_size=20):
     containers = [Container(length=c[0], width=c[1], height=c[2]) for c in container_dimensions]
     boxes = [Box(length=b[0], width=b[1], height=b[2]) for b in package_dimensions]
-
     
-    ulds, packages = PerformBoxPacking(containers=containers,   
+    
+
+    best_packing_solution = PerformBoxPacking(containers=containers,   
                                         boxes=boxes,   
-                                        n_iter=2,   
-                                        population_size=10,   
+                                        n_iter=n_iters,   
+                                        population_size=population_size,   
                                         elitism_size=5,   
                                         crossover_prob=0.5,   
                                         mutation_prob=0.5,   
                                         verbose=True,   
                                         plotSolution=True)
+
+    # for package in packages:
+    #     print(package, packages[package])
+    # for uld in ulds:
+    #     print(uld)
     
-    return ocm(ulds, packages)
+    uld_dimensions_dict = {}
+    package_dimensions_dict = {}
+    
+    for uld in container_dimensions:
+        uld_dimensions_dict[uld[3]] = (uld[0], uld[1], uld[2])
+    for package in package_dimensions:
+        package_dimensions_dict[package[3]] = (package[0], package[1], package[2])
+    
+    package_matcher = PackageMatcher(best_packing_solution, uld_dimensions_dict, package_dimensions_dict)
+
+    return package_matcher
 
 if __name__ == "__main__":
-    containers_np = np.loadtxt("uld.txt", skiprows=1) # adapt as needed
+    # containers_np = np.loadtxt("R/uld.txt", skiprows=1) # adapt as needed
+    containers_np = np.loadtxt("R/uld.txt", skiprows=1, dtype=object) # adapt as needed
     # containers = [Container(length=c[0], width=c[1], height=c[2]) for c in containers_data]
-    containers_data = [[c[0], c[1], c[2]] for c in containers_np]
-    packages_np = np.loadtxt("economic.txt", skiprows=1) # adapt as needed
-    packages_data = [[b[0], b[1], b[2]] for b in packages_np]
+    containers_data = [[int(c[0]), int(c[1]), int(c[2]), str(c[3])] for c in containers_np]
+    # packages_np = np.loadtxt("R/economic.txt", skiprows=1) # adapt as needed
+    packages_np = np.loadtxt("R/economic.txt", skiprows=1, dtype=object) # adapt as needed
+    # print(packages_np)
+    packages_data = [[int(b[0]), int(b[1]), int(b[2]), str(b[3])] for b in packages_np]
+    all_packages_id = [str(b[3]) for b in packages_data]
     # solution = PerformBoxPacking(containers=containers, boxes=packages, n_iter=2, population_size=10, elitism_size=5, crossover_prob=0.5, mutation_prob=0.5, verbose=True, plotSolution=True)
     
     # ocm_solution = process_packing(solution)
-    ocm_solution = get_packing_genetic_algorithm(containers_data, packages_data)
-    sv = SolutionValidator(ocm_solution)
-    sv.validate()
-    print(sv.is_valid())
-    print(sv.priority_score())
-    print(sv.economy_score())
+    package_matcher = get_packing_genetic_algorithm(containers_data, packages_data)
+    
+    for package_id in all_packages_id:
+        print(package_matcher.get_package_position(package_id), package_matcher.get_parent_uld(package_id))
+    
+    # sv = SolutionValidator(ocm_solution)
+    # sv.validate()
+    # print(sv.is_valid())
+    # print(sv.priority_score())
+    # print(sv.economy_score())
     
     
