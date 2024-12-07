@@ -33,6 +33,8 @@ class OptimalCargoManagement(object):
         self.non_priority_ordering = None
         self.priority_ordering = None
         self.verbose = verbose
+        self.MIN_PRIORITY_ULDS = 3  
+        self.MINIMUM_ECONOMY_PACKAGES = 150
 
     def log(self, message):
         """
@@ -101,13 +103,20 @@ class OptimalCargoManagement(object):
             optional_ordering (list, optional): Custom ordering of packages for loading. Default is None.
             selected_ulds (list, optional): Specific ULD IDs to use for loading. Default is None.
         """
-        self.log(f"Fitting packages: {len(self.packages)} packages in {len(self.ulds)} ULDs")
+        self.log(f"Fitting packages in {len(self.ulds)} ULDs")
         self.log(f"Optional ordering: {True if optional_ordering is not None else False}")
 
         package_order = optional_ordering if optional_ordering else self.package_ordering
         for order in package_order:
             package_id = order[0]
-            ulds_to_use = selected_ulds if selected_ulds else self.ulds.keys()
+            # ulds_to_use = selected_ulds if selected_ulds is not None else random.shuffle(list(self.ulds.keys()))
+            # print(ulds_to_use, selected_ulds)
+            if selected_ulds is not None:
+                ulds_to_use = selected_ulds
+            else:
+                ulds_to_use = list(self.ulds.keys())
+                random.shuffle(ulds_to_use)
+            # print(list(self.ulds.keys()))
             for uld_id in ulds_to_use:
                 if self.ulds[uld_id].uld_fill_greedy(self.packages[package_id]):
                     break
@@ -259,27 +268,47 @@ class OptimalCargoManagement(object):
             3. Create and run a genetic algorithm instance for non-priority packages.
             4. Update ULDs and packages with the optimized placement.
         """
-        # Process priority packages with genetic algorithm
-        containers_data = [
-            [uld.length, uld.width, uld.height, uld.uld_id]
-            for uld in self.ulds.values() if uld.uld_id in ['U4', 'U5', 'U6']
-        ]
-        packages_data = [
-            [package.length, package.width, package.height, package.package_id]
-            for package in self.packages.values() if package.priority
-        ]
-        priority_ga_instance = GeneticAlgorithm(uld_dimensions=containers_data, package_dimensions=packages_data)
-        priority_ga_solution = priority_ga_instance.run_genetic_algorithm()
+        for top_k in range(min(self.MIN_PRIORITY_ULDS, len(self.ulds)//2), len(self.ulds)+1):
+            try:
+                largest_ulds_by_volume = sorted(
+                    self.ulds.keys(),
+                    key=lambda x: ((self.ulds[x].length * self.ulds[x].width * self.ulds[x].height),x),
+                    reverse=True
+                )[:top_k]
 
-        # Update placement of priority packages
-        for package in self.packages.values():
-            if package.priority:
-                parent_uld = priority_ga_solution.get_parent_uld(package_id=package.package_id)
-                ref_corner = priority_ga_solution.get_package_position(package_id=package.package_id)
-                pkg_orientation = priority_ga_solution.get_package_orientation(package_id=package.package_id)
-                package.loaded = parent_uld
-                package.length, package.width, package.height = pkg_orientation
-                package.generate_corners(ref_corner)
+                
+                # Process priority packages with genetic algorithm
+                containers_data = [
+                    [uld.length, uld.width, uld.height, uld.uld_id]
+                    for uld in self.ulds.values() if uld.uld_id in largest_ulds_by_volume
+                ]
+                
+                packages_data = [
+                    [package.length, package.width, package.height, package.package_id]
+                    for package in self.packages.values() if package.priority
+                ]
+                
+                priority_ga_instance = GeneticAlgorithm(uld_dimensions=containers_data, package_dimensions=packages_data)
+                priority_ga_solution = priority_ga_instance.run_genetic_algorithm()
+
+                # Update placement of priority packages
+                for package in self.packages.values():
+                    if package.priority:
+                        parent_uld = priority_ga_solution.get_parent_uld(package_id=package.package_id)
+                        ref_corner = priority_ga_solution.get_package_position(package_id=package.package_id)
+                        pkg_orientation = priority_ga_solution.get_package_orientation(package_id=package.package_id)
+                        package.loaded = parent_uld
+                        package.length, package.width, package.height = pkg_orientation
+                        package.generate_corners(ref_corner)
+                        
+                self.log(f"Priority Packages Processed with Top {top_k} ULDs By Volume: {largest_ulds_by_volume}")
+                break
+            except:
+                self.log(f"Error in processing priority packages with Top {top_k} By Volume")
+                self.log(f"Trying with Top {top_k+1} By Volume")
+                for uld_id in self.ulds.keys():
+                    self.ulds[uld_id].refresh()
+                continue
 
         # Refresh unused ULDs
         unused_uld_ids = self.unused_uld_ids()
@@ -293,7 +322,7 @@ class OptimalCargoManagement(object):
             self.non_priority_ordering,
             key=lambda x: (non_priority_delay_dict[x[0]]) / (non_priority_volume_dict[x[0]]) ** 1.2,
             reverse=True
-        )[:150]
+        )[:max((len(self.non_priority_ordering))//2,self.MINIMUM_ECONOMY_PACKAGES)]
         economy_pkg_ordering = [pkg[0] for pkg in economy_pkg_ordering]
         random.shuffle(economy_pkg_ordering)
 

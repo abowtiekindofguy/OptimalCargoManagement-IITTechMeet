@@ -67,6 +67,8 @@ class ULD:
         """
         self.used_volume = 0
         self.used_weight = 0
+        for package in self.packages.values():
+            package.loaded = None
         self.packages = {}
         self.x_filled, self.y_filled, self.z_filled = 0, 0, 0
         self.last_plane_y = 0

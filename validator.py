@@ -92,6 +92,10 @@ class SolutionValidator:
         for package_id, package in self.solution_packages.items():
             if package.loaded:
                 package_collection[package.loaded].append(package)
+            if package.loaded is None and package.priority:
+                self.valid = False
+                self.log(f"Priority package {package_id} is not loaded")
+                return
 
         for uld_id in package_collection:
             uld = self.solution_ulds[uld_id]
