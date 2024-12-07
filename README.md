@@ -1,6 +1,6 @@
-# Project Title
+# Optimal Cargo Management - FedEx (Team 32)
 
-A brief description of your project, its purpose, and key features.
+Please find the detailed documentation below for running the project.
 
 ## Table of Contents
 
@@ -57,7 +57,9 @@ For example:
 make run input=data/input.txt output=data/output.txt verbose=1
 ```
 
-This command will execute `main.py` with the provided arguments. Any logs will be saved to `log.txt`.
+This command will execute `main.py` with the provided arguments. Any logs will be saved to `log.txt`. Note that you can access the logs only after the script has finished executing. Also, the `verbose` argument can be set to `0` or `1`to control the verbosity level.
+
+After the execution of the script, solution would be obtained in `output_file_path` and a graphic would be saved for each of the ULDs.
 
 ### Visualizing the Output
 
@@ -73,11 +75,11 @@ For example:
 make visualize input=data/input.txt output=data/output.txt
 ```
 
-This command will display the output using a visualization tool powered by MatPlotLib.
+This command will display the output using a visualization tool powered by MatPlotLib. The visualization will be displayed in a new window titled "Optimal Cargo Management - FedEx". Also, a png graphic would be saved for the visualization with a particular default projection.
 
 ### Troubleshooting
 
-- If the `input`, `output`, or `verbose` arguments are not provided, the script will display an error message indicating which argument is missing.
+- If the `input`, `output`, or `verbose` arguments are not provided, the script will display an error message indicating the first argument that is missing.
 
 ## License
 

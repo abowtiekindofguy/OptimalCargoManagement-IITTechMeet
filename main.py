@@ -24,21 +24,15 @@ if __name__ == "__main__":
     
     def run_simulation(run_number):
         ulds, packages, K = parse_input(input_file)
-
         ocm = OptimalCargoManagement(ulds, packages, K, verbose)
-        
         ocm.create_package_ordering()
-        
         ocm.run_genetic_algorithm()
-        
         ocm.adhoc_additions()
-        
-        print(run_number + 1, ocm.cost())
-        
+        print(run_number, ocm.cost())
         return ocm
     
     all_ocms = []
-    ocm = run_simulation(0)
+    ocm = run_simulation(1)
     sv = SolutionValidator(ocm, verbose)
     sv.validate()
     if sv.is_valid():
@@ -54,4 +48,4 @@ if __name__ == "__main__":
     min_ocm = all_ocms[min_cost_arg]
     min_ocm.file_output_ocm(f"{output_file}")
         
-    visualize(input_file=input_file, output_file=output_file, show = True)
+    visualize(input_file=input_file, output_file=output_file, show = False)

@@ -63,9 +63,10 @@ def visualize_packing(packages, packages1, ulds, output_file, rows=2, cols=3, co
 
         total_priority += pri_cost
         total_economy += eco_cost
-        print(f"{uld_id} Max Capacity: {ulds[uld_id].capacity}, Filled: {filled_capacity}")
+
         if not combined:
-            plt.savefig(f"{output_file}_{uld_id}.png")
+            output_file_stripped = output_file.split()[0]
+            plt.savefig(f"{output_file_stripped}_{uld_id}.png")
             plt.close()
 
         if combined and plot_idx > rows * cols:
