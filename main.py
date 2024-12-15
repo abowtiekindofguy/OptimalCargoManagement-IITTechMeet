@@ -33,6 +33,7 @@ if __name__ == "__main__":
     ga_sv.validate()
     if ga_sv.is_valid():
         print("GA solution is valid.")
+        print("GA solution cost: ", ga_ocm.cost())  
     else:
         print("GA solution is invalid.")
         ga_ocm = None   
