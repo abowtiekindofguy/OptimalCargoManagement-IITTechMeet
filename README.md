@@ -1,8 +1,9 @@
 # Optimal Cargo Management - FedEx (Team 32)
+This is IIT Delhi's submission for the 13th Inter IIT Tech Meet. The goal was to pack packages into Unit Loading Devices as efficiently as possible while retaining sufficient generalization for unseen data.
 
-Please find the detailed documentation below for running the project.
+Joint work with Arpit Agrawal and Kushagra Gupta
 
-## Table of Contents
+## Running the Code
 
 - [Installation](#installation)
 - [Usage](#usage)
